@@ -1,0 +1,1348 @@
+<style>
+	   /* Animación de aparición para menús */
+	   .menu-admin, #admin-fab-menu, #notificaciones-panel, #menu-carrito {
+		   opacity: 0;
+		   transform: scale(0.95);
+		   pointer-events: none;
+		   transition: opacity 0.22s cubic-bezier(.4,0,.2,1), transform 0.22s cubic-bezier(.4,0,.2,1);
+	   }
+	   .menu-admin.visible, #admin-fab-menu.visible, #notificaciones-panel.visible, #menu-carrito.visible {
+		   opacity: 1;
+		   transform: scale(1);
+		   pointer-events: auto;
+	   }
+</style>
+<script>
+// Comando para desactivar el modo admin desde la consola
+window.desactivarAdmin = function() {
+	localStorage.removeItem('adminMode');
+	// Ocultar panel y botón admin si están visibles
+	var fab = document.getElementById('admin-fab');
+	if (fab) fab.style.display = 'none';
+	var adminPanel = document.getElementById('admin-panel');
+	if (adminPanel) adminPanel.style.display = 'none';
+	if (typeof renderProductos === 'function') renderProductos();
+	alert('Modo admin desactivado');
+};
+</script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
+	<style>
+		#menu-carrito {
+			display: none;
+			position: fixed;
+			top: 80px;
+			right: 32px;
+			width: 320px;
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+			padding: 20px 18px 18px 18px;
+			z-index: 3000;
+		}
+		#menu-carrito.visible {
+			display: block;
+		}
+		#menu-carrito h3 {
+			margin: 0 0 12px 0;
+			font-size: 1.2rem;
+			color: #007bff;
+			font-family: 'Montserrat', Arial, sans-serif;
+		}
+		#lista-carrito {
+			list-style: none;
+			padding: 0;
+			margin: 0 0 10px 0;
+			max-height: 180px;
+			overflow-y: auto;
+		}
+		#lista-carrito li {
+			font-size: 1rem;
+			color: #333;
+			margin-bottom: 8px;
+			font-family: Arial, sans-serif;
+		}
+		#menu-carrito .vacio {
+			color: #888;
+			font-size: 1rem;
+			text-align: center;
+		}
+		#menu-carrito .cerrar {
+			background: none;
+			border: none;
+			color: #e83e8c;
+			font-size: 1.1rem;
+			float: right;
+			cursor: pointer;
+			margin-top: -8px;
+		}
+		.item-carrito {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-bottom: 12px;
+		}
+		.item-carrito img {
+			width: 48px;
+			height: 48px;
+			object-fit: contain;
+			border-radius: 8px;
+			background: #f5f5f5;
+		}
+		.item-carrito .info {
+			flex: 1;
+		}
+		.item-carrito .nombre {
+			font-size: 1rem;
+			font-weight: bold;
+			color: #333;
+		}
+		.item-carrito .precio {
+			color: #007bff;
+			font-size: 1rem;
+		}
+		.item-carrito .controles {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
+		.item-carrito button {
+			background: #e0e0e0;
+			border: none;
+			border-radius: 4px;
+			width: 28px;
+			height: 28px;
+			font-size: 1.1rem;
+			cursor: pointer;
+			font-family: 'Montserrat', Arial, sans-serif;
+		}
+		.item-carrito .eliminar {
+			background: #e83e8c;
+			color: #fff;
+			margin-left: 6px;
+		}
+	</style>
+	<style>
+		#carrito {
+			position: fixed;
+			top: 24px;
+			right: 32px;
+			background: #fff;
+			border: none;
+			border-radius: 50%;
+			width: 56px;
+			height: 56px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			z-index: 2000;
+			transition: box-shadow 0.2s;
+		}
+		#carrito:hover {
+			box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+		}
+		#carrito svg {
+			width: 28px;
+			height: 28px;
+			fill: #007bff;
+		}
+		#contador-carrito {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			background: #e83e8c;
+			color: #fff;
+			font-size: 1rem;
+			border-radius: 50%;
+			width: 22px;
+			height: 22px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-family: 'Montserrat', Arial, sans-serif;
+			font-weight: bold;
+		}
+	</style>
+	<meta charset="UTF-8">
+	<title>Tienda</title>
+	<style>
+		@keyframes pulse {
+			0% {
+				transform: scale(1);
+				opacity: 1;
+			}
+			50% {
+				transform: scale(1.08);
+				opacity: 0.6;
+			}
+			100% {
+				transform: scale(1);
+				opacity: 1;
+			}
+		}
+		.boton-comprar.pulse, .boton-info.pulse {
+			animation: pulse 0.3s;
+		}
+		body {
+			margin: 0;
+			font-family: 'Montserrat', Arial, sans-serif;
+			background: linear-gradient(120deg, #1e3a5c 0%, #3b82f6 100%);
+			min-height: 100vh;
+		}
+		h1 {
+			text-align: center;
+			margin-top: 32px;
+			color: #fff;
+			font-size: 2.1rem;
+			font-weight: bold;
+			letter-spacing: 1px;
+			margin-bottom: 24px;
+			text-shadow: 0 2px 8px rgba(30,58,92,0.18);
+		}
+		.productos {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 32px;
+			margin: 40px auto;
+			max-width: 1200px;
+		}
+		.producto {
+			background: rgba(255,255,255,0.10);
+			border-radius: 18px;
+			box-shadow: 0 8px 32px rgba(30,58,92,0.18);
+			padding: 28px 20px 24px 20px;
+			width: 280px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			backdrop-filter: blur(4px);
+			border: 1.5px solid rgba(59,130,246,0.18);
+			transition: box-shadow 0.18s, transform 0.18s;
+		}
+		.producto:hover {
+			box-shadow: 0 12px 36px rgba(30,58,92,0.22);
+			transform: translateY(-6px) scale(1.04);
+		}
+		.producto img {
+			width: 160px;
+			height: 160px;
+			object-fit: contain;
+			margin-bottom: 16px;
+		}
+		.producto h2 {
+			font-size: 1.2rem;
+			margin: 0 0 8px 0;
+			color: #dbeafe;
+			font-weight: bold;
+			letter-spacing: 0.5px;
+		}
+		.producto p {
+			color: #bae6fd;
+			font-size: 1rem;
+			margin: 0 0 16px 0;
+		}
+		.producto .precio {
+			font-weight: bold;
+			color: #60a5fa;
+			margin-bottom: 16px;
+			font-size: 1.1rem;
+		}
+		.botones {
+			display: flex;
+			gap: 12px;
+		}
+		   .boton-comprar, .boton-info {
+			   padding: 10px 18px;
+			   border: none;
+			   border-radius: 8px;
+			   font-size: 1rem;
+			   cursor: pointer;
+			   font-family: 'Montserrat', Arial, sans-serif;
+			   font-weight: bold;
+			   letter-spacing: 0.5px;
+			   box-shadow: 0 2px 8px rgba(30,58,92,0.10);
+			   transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+			   will-change: transform, box-shadow;
+		   }
+		.boton-comprar {
+			background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+			color: #fff;
+		}
+		   .boton-comprar:hover, .boton-info:hover {
+			   background: linear-gradient(90deg, #1e40af 0%, #60a5fa 100%);
+			   transform: scale(1.08);
+			   box-shadow: 0 6px 24px rgba(30,58,92,0.18);
+		   }
+		   .boton-info {
+			   background: #dbeafe;
+			   color: #1e3a5c;
+		   }
+	   /* Animación para todos los botones generales */
+	   button, .boton-comprar, .boton-info, .cerrar, #carrito, #abrir-notificaciones, #admin-fab, #fab-producto, #fab-notificacion, .admin-eliminar, .admin-renombrar, .admin-agotar, .admin-disponible {
+		   transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+		   will-change: transform, box-shadow;
+	   }
+	   button:hover, .boton-comprar:hover, .boton-info:hover, .cerrar:hover, #carrito:hover, #abrir-notificaciones:hover, #admin-fab:hover, #fab-producto:hover, #fab-notificacion:hover, .admin-eliminar:hover, .admin-renombrar:hover, .admin-agotar:hover, .admin-disponible:hover {
+		   transform: scale(1.08);
+		   box-shadow: 0 6px 24px rgba(30,58,92,0.18);
+		   filter: brightness(1.08);
+	   }
+	</style>
+</head>
+<body>
+	<button id="admin-fab" style="display:none;position:fixed;bottom:32px;right:32px;z-index:7000;width:56px;height:56px;border-radius:50%;background:#2563eb;color:#fff;font-size:2.2rem;border:none;box-shadow:0 4px 16px rgba(30,58,92,0.18);cursor:pointer;transition:box-shadow 0.18s;">+</button>
+	<div id="admin-fab-menu" style="display:none;position:fixed;bottom:96px;right:36px;z-index:7100;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(30,58,92,0.13);padding:12px 0;min-width:180px;">
+		<button id="fab-producto" style="display:block;width:100%;background:none;border:none;padding:12px 24px;text-align:left;font-size:1.08rem;color:#2563eb;cursor:pointer;">➕ Producto</button>
+		<button id="fab-notificacion" style="display:block;width:100%;background:none;border:none;padding:12px 24px;text-align:left;font-size:1.08rem;color:#2563eb;cursor:pointer;">🔔 Nueva notificación</button>
+		<button id="fab-mensaje-admin" style="display:block;width:100%;background:none;border:none;padding:12px 24px;text-align:left;font-size:1.08rem;color:#e83e8c;cursor:pointer;">💬 Mensaje global</button>
+	</div>
+	<div id="notificaciones-panel" style="display:none;position:fixed;top:80px;right:40px;min-width:320px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(30,58,92,0.13);padding:24px 32px;z-index:6000;">
+		<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+			<h3 style="margin:0;color:#2563eb;font-family:'Montserrat',Arial,sans-serif;font-weight:bold;">Notificaciones</h3>
+			<button id="cerrar-notificaciones" style="background:none;border:none;font-size:1.5rem;color:#e83e8c;cursor:pointer;">×</button>
+		</div>
+		<ul id="lista-notificaciones" style="padding-left:18px;margin:0 0 8px 0;font-size:1.05rem;color:#222;"></ul>
+	</div>
+	<button id="abrir-notificaciones" style="position:fixed;top:24px;right:100px;z-index:6100;background:#2563eb;color:#fff;border:none;border-radius:50%;width:48px;height:48px;font-size:1.5rem;box-shadow:0 2px 8px rgba(30,58,92,0.13);cursor:pointer;">🔔</button>
+   <div id="notificaciones" style="display:none;position:fixed;top:0;left:0;width:100%;z-index:5000;text-align:center;">
+	   <div style="display:inline-block;background:#007bff;color:#fff;padding:14px 32px;margin:16px auto;border-radius:8px;font-size:1.1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);min-width:220px;max-width:90vw;" id="notificaciones-mensaje"></div>
+   </div>
+<style>
+#mensaje-global-admin {
+  display: none;
+  position: fixed;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2563eb;
+  color: #fff;
+  padding: 18px 36px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-family: 'Montserrat', Arial, sans-serif;
+  box-shadow: 0 4px 24px rgba(30,58,92,0.13);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+#mensaje-global-admin.visible {
+  display: block;
+  opacity: 1;
+  animation: fadeInOutAdmin 5s forwards;
+}
+@keyframes fadeInOutAdmin {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+</style>
+<div id="mensaje-global-admin"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const fab = document.getElementById('admin-fab');
+  const menu = document.getElementById('admin-fab-menu');
+  if (localStorage.getItem('adminMode') === 'true') {
+    fab.style.display = 'block';
+  }
+  fab.onclick = function() {
+		   if (menu.classList.contains('visible')) {
+			   menu.classList.remove('visible');
+			   setTimeout(() => { menu.style.display = 'none'; }, 220);
+		   } else {
+			   menu.style.display = 'block';
+			   setTimeout(() => { menu.classList.add('visible'); }, 10);
+		   }
+	};
+	document.body.addEventListener('click', function(e) {
+		if (e.target !== fab && !menu.contains(e.target)) {
+			menu.style.display = 'none';
+		}
+	});
+	// Opción Producto: mostrar panel de agregar producto
+	const btnProducto = document.getElementById('fab-producto');
+	if (btnProducto) {
+		btnProducto.onclick = function() {
+			localStorage.setItem('adminMode', 'true');
+			document.getElementById('admin-panel').style.display = 'block';
+			setTimeout(() => {
+				document.getElementById('admin-panel').scrollIntoView({behavior:'smooth'});
+			}, 100);
+			menu.style.display = 'none';
+		};
+	}
+
+	// Modal para nueva notificación
+	let modal = document.getElementById('modal-notificacion');
+	if (!modal) {
+		modal = document.createElement('div');
+		modal.id = 'modal-notificacion';
+		modal.style.display = 'none';
+		modal.style.position = 'fixed';
+		modal.style.top = '0';
+		modal.style.left = '0';
+		modal.style.width = '100vw';
+		modal.style.height = '100vh';
+		modal.style.background = 'rgba(0,0,0,0.4)';
+		modal.style.zIndex = '9999';
+		modal.innerHTML = `
+			<div style="background:#fff;max-width:350px;margin:10vh auto;padding:24px 18px;border-radius:12px;box-shadow:0 2px 16px #0002;position:relative;">
+				<h3 style='margin-top:0'>Nueva notificación</h3>
+				<input id='noti-titulo' placeholder='Título' style='width:100%;margin-bottom:8px;padding:6px 8px;border-radius:4px;border:1px solid #ccc'>
+				<textarea id='noti-mensaje' placeholder='Mensaje' style='width:100%;height:60px;margin-bottom:8px;padding:6px 8px;border-radius:4px;border:1px solid #ccc'></textarea>
+				<div style='text-align:right'>
+					<button id='noti-cancelar' style='margin-right:8px'>Cancelar</button>
+					<button id='noti-enviar' style='background:#1976d2;color:#fff;border:none;padding:6px 16px;border-radius:4px'>Enviar</button>
+				</div>
+			</div>
+		`;
+		document.body.appendChild(modal);
+	}
+
+	// Opción Nueva notificación: mostrar modal
+	const btnNoti = document.getElementById('fab-notificacion');
+	if (btnNoti) {
+		btnNoti.onclick = function() {
+			modal.style.display = 'block';
+			menu.style.display = 'none';
+		};
+	}
+
+	// Eventos modal
+	modal.addEventListener('click', function(e) {
+		if (e.target === modal) modal.style.display = 'none';
+	});
+	modal.querySelector('#noti-cancelar').onclick = function() {
+		modal.style.display = 'none';
+	};
+	modal.querySelector('#noti-enviar').onclick = function() {
+		const titulo = modal.querySelector('#noti-titulo').value.trim();
+		const mensaje = modal.querySelector('#noti-mensaje').value.trim();
+		if (!titulo || !mensaje) {
+			alert('Completa ambos campos');
+			return;
+		}
+		// Guardar notificación global en localStorage
+		let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+		notis.unshift({titulo, mensaje, fecha: new Date().toISOString(), global:true});
+		localStorage.setItem('notificaciones', JSON.stringify(notis));
+		modal.style.display = 'none';
+		modal.querySelector('#noti-titulo').value = '';
+		modal.querySelector('#noti-mensaje').value = '';
+		alert('Notificación enviada');
+		// Opcional: recargar panel de notificaciones si existe
+		if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+	};
+
+  const btnMensajeAdmin = document.getElementById('fab-mensaje-admin');
+  if (btnMensajeAdmin) {
+    btnMensajeAdmin.onclick = function(e) {
+      e.stopPropagation();
+      menu.classList.remove('visible');
+      setTimeout(() => { menu.style.display = 'none'; }, 220);
+      if (localStorage.getItem('adminMode') === 'true') {
+        const msg = prompt('Mensaje global para todos los usuarios:');
+        if (msg && msg.trim()) {
+          localStorage.setItem('mensajeGlobal', msg.trim());
+          window.mostrarMensajeGlobal(msg.trim());
+        }
+      }
+    };
+  }
+  // Mostrar mensaje global si existe
+  const mensaje = localStorage.getItem('mensajeGlobal');
+  if (mensaje) {
+    window.mostrarMensajeGlobal(mensaje);
+    setTimeout(() => { localStorage.removeItem('mensajeGlobal'); }, 5200);
+  }
+});
+window.mostrarMensajeGlobal = function(msg) {
+  var el = document.getElementById('mensaje-global-admin');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(function() {
+    el.classList.remove('visible');
+    el.textContent = '';
+  }, 5000);
+};
+</script>
+<script>
+// FAB admin
+document.addEventListener('DOMContentLoaded', function() {
+	const fab = document.getElementById('admin-fab');
+	const menu = document.getElementById('admin-fab-menu');
+	if (localStorage.getItem('adminMode') === 'true') {
+		fab.style.display = 'block';
+	}
+	fab.onclick = function() {
+		   if (menu.classList.contains('visible')) {
+			   menu.classList.remove('visible');
+			   setTimeout(() => { menu.style.display = 'none'; }, 220);
+		   } else {
+			   menu.style.display = 'block';
+			   setTimeout(() => { menu.classList.add('visible'); }, 10);
+		   }
+	};
+	document.body.addEventListener('click', function(e) {
+		if (e.target !== fab && !menu.contains(e.target)) {
+			menu.style.display = 'none';
+		}
+	});
+	// Opción Producto: mostrar panel de agregar producto
+	const btnProducto = document.getElementById('fab-producto');
+	if (btnProducto) {
+		btnProducto.onclick = function() {
+			localStorage.setItem('adminMode', 'true');
+			document.getElementById('admin-panel').style.display = 'block';
+			setTimeout(() => {
+				document.getElementById('admin-panel').scrollIntoView({behavior:'smooth'});
+			}, 100);
+			menu.style.display = 'none';
+		};
+	}
+
+	// Modal para nueva notificación
+	let modal = document.getElementById('modal-notificacion');
+	if (!modal) {
+		modal = document.createElement('div');
+		modal.id = 'modal-notificacion';
+		modal.style.display = 'none';
+		modal.style.position = 'fixed';
+		modal.style.top = '0';
+		modal.style.left = '0';
+		modal.style.width = '100vw';
+		modal.style.height = '100vh';
+		modal.style.background = 'rgba(0,0,0,0.4)';
+		modal.style.zIndex = '9999';
+		modal.innerHTML = `
+			<div style="background:#fff;max-width:350px;margin:10vh auto;padding:24px 18px;border-radius:12px;box-shadow:0 2px 16px #0002;position:relative;">
+				<h3 style='margin-top:0'>Nueva notificación</h3>
+				<input id='noti-titulo' placeholder='Título' style='width:100%;margin-bottom:8px;padding:6px 8px;border-radius:4px;border:1px solid #ccc'>
+				<textarea id='noti-mensaje' placeholder='Mensaje' style='width:100%;height:60px;margin-bottom:8px;padding:6px 8px;border-radius:4px;border:1px solid #ccc'></textarea>
+				<div style='text-align:right'>
+					<button id='noti-cancelar' style='margin-right:8px'>Cancelar</button>
+					<button id='noti-enviar' style='background:#1976d2;color:#fff;border:none;padding:6px 16px;border-radius:4px'>Enviar</button>
+				</div>
+			</div>
+		`;
+		document.body.appendChild(modal);
+	}
+
+	// Opción Nueva notificación: mostrar modal
+	const btnNoti = document.getElementById('fab-notificacion');
+	if (btnNoti) {
+		btnNoti.onclick = function() {
+			modal.style.display = 'block';
+			menu.style.display = 'none';
+		};
+	}
+
+	// Eventos modal
+	modal.addEventListener('click', function(e) {
+		if (e.target === modal) modal.style.display = 'none';
+	});
+	modal.querySelector('#noti-cancelar').onclick = function() {
+		modal.style.display = 'none';
+	};
+	modal.querySelector('#noti-enviar').onclick = function() {
+		const titulo = modal.querySelector('#noti-titulo').value.trim();
+		const mensaje = modal.querySelector('#noti-mensaje').value.trim();
+		if (!titulo || !mensaje) {
+			alert('Completa ambos campos');
+			return;
+		}
+		// Guardar notificación global en localStorage
+		let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+		notis.unshift({titulo, mensaje, fecha: new Date().toISOString(), global:true});
+		localStorage.setItem('notificaciones', JSON.stringify(notis));
+		modal.style.display = 'none';
+		modal.querySelector('#noti-titulo').value = '';
+		modal.querySelector('#noti-mensaje').value = '';
+		alert('Notificación enviada');
+		// Opcional: recargar panel de notificaciones si existe
+		if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+	};
+
+  const btnMensajeAdmin = document.getElementById('fab-mensaje-admin');
+  if (btnMensajeAdmin) {
+    btnMensajeAdmin.onclick = function(e) {
+      e.stopPropagation();
+      menu.classList.remove('visible');
+      setTimeout(() => { menu.style.display = 'none'; }, 220);
+      if (localStorage.getItem('adminMode') === 'true') {
+        const msg = prompt('Mensaje global para todos los usuarios:');
+        if (msg && msg.trim()) {
+          localStorage.setItem('mensajeGlobal', msg.trim());
+          window.mostrarMensajeGlobal(msg.trim());
+        }
+      }
+    };
+  }
+  // Mostrar mensaje global si existe
+  const mensaje = localStorage.getItem('mensajeGlobal');
+  if (mensaje) {
+    window.mostrarMensajeGlobal(mensaje);
+    setTimeout(() => { localStorage.removeItem('mensajeGlobal'); }, 5200);
+  }
+});
+window.mostrarMensajeGlobal = function(msg) {
+  var el = document.getElementById('mensaje-global-admin');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(function() {
+    el.classList.remove('visible');
+    el.textContent = '';
+  }, 5000);
+};
+</script>
+<script>
+// Notificaciones de ejemplo (puedes editar o cargar desde localStorage)
+	const panel = document.getElementById('notificaciones-panel');
+	const abrirBtn = document.getElementById('abrir-notificaciones');
+	const cerrarBtn = document.getElementById('cerrar-notificaciones');
+	const lista = document.getElementById('lista-notificaciones');
+	function renderNotificaciones() {
+		lista.innerHTML = '';
+		// Cargar notificaciones de localStorage
+		let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+		const usuario = localStorage.getItem('usuarioNombre') || '';
+		// Filtrar: globales o personales para este usuario
+		notis = notis.filter(n => n.global || (n.usuario && n.usuario === usuario));
+		if (notis.length === 0) {
+			const li = document.createElement('li');
+			li.textContent = 'No hay notificaciones.';
+			li.style.color = '#888';
+			lista.appendChild(li);
+			return;
+		}
+		const esAdmin = localStorage.getItem('adminMode') === 'true';
+		notis.forEach((n, i) => {
+			const li = document.createElement('li');
+			li.innerHTML = `<b>${n.titulo||''}</b><br><span style='font-size:0.98em;'>${n.mensaje||''}</span>`;
+			if (n.global) {
+				li.style.borderLeft = '4px solid #2563eb';
+				li.style.background = '#e0e7ff';
+			} else {
+				li.style.borderLeft = n.estado==='aceptado' ? '4px solid #28a745' : (n.estado==='rechazado' ? '4px solid #e83e8c' : '4px solid #f59e42');
+				li.style.background = n.estado==='aceptado' ? '#d1fae5' : (n.estado==='rechazado' ? '#ffe4ef' : '#fffbe6');
+			}
+			li.style.marginBottom = '10px';
+			li.style.padding = '10px 12px';
+			li.style.borderRadius = '8px';
+			// Botón eliminar solo para admin
+			if (esAdmin) {
+				const btn = document.createElement('button');
+				btn.textContent = 'Eliminar';
+				btn.style.cssText = 'float:right;background:#e83e8c;color:#fff;border:none;border-radius:6px;padding:3px 12px;margin-left:8px;cursor:pointer;font-size:0.98em;';
+				btn.onclick = function(e) {
+					e.stopPropagation();
+					if(confirm('¿Eliminar esta notificación?')) {
+						let notisAll = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+						// Buscar la notificación por fecha+titulo+mensaje
+						notisAll = notisAll.filter(x => !(x.fecha===n.fecha && x.titulo===n.titulo && x.mensaje===n.mensaje));
+						localStorage.setItem('notificaciones', JSON.stringify(notisAll));
+						renderNotificaciones();
+					}
+				};
+				li.appendChild(btn);
+			}
+			lista.appendChild(li);
+		});
+	}
+	   abrirBtn.onclick = function() {
+		   renderNotificaciones();
+		   panel.style.display = 'block';
+		   setTimeout(() => { panel.classList.add('visible'); }, 10);
+	   };
+	   cerrarBtn.onclick = function() {
+		   panel.classList.remove('visible');
+		   setTimeout(() => { panel.style.display = 'none'; }, 220);
+	   };
+	</script>
+	<div id="menu-carrito">
+		   <button class="cerrar" onclick="document.getElementById('menu-carrito').classList.remove('visible')">×</button>
+		   <h3>Carrito de compras</h3>
+		   <ul id="lista-carrito">
+			   <li class="vacio">El carrito está vacío</li>
+		   </ul>
+		   <div id="carrito-total" style="margin: 10px 0 0 0; font-weight: bold; color: #222; text-align: right;">Total: $0.00</div>
+		   <button id="carrito-comprar" style="width: 100%; margin-top: 10px; background: #007bff; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 1rem; cursor: pointer;">Comprar</button>
+	</div>
+	<button id="carrito">
+		<svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14h9.45c.75 0 1.41-.41 1.75-1.03l3.24-6.16a1 1 0 0 0-.89-1.47H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 17.37 5.48 19 7 19h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l.03-.05H7.16z"></path></svg>
+		<span id="contador-carrito">0</span>
+	</button>
+	<h1>Tienda</h1>
+	<div id="admin-panel" style="display:none;max-width:420px;margin:32px auto 0 auto;padding:24px 24px 18px 24px;background:rgba(30,58,92,0.18);border-radius:16px;box-shadow:0 4px 24px rgba(30,58,92,0.13);position:relative;">
+		<button id="cerrar-admin-panel" style="position:absolute;top:10px;right:10px;background:none;border:none;color:#bae6fd;font-size:1.5rem;cursor:pointer;">×</button>
+		<h2 style="color:#bae6fd;text-align:center;font-size:1.3rem;margin-bottom:18px;">Añadir producto (solo admin)</h2>
+		<form id="form-add-product" autocomplete="off">
+			<input type="text" id="nuevo-nombre" placeholder="Nombre del producto" required style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:1.5px solid #60a5fa;background:rgba(255,255,255,0.18);color:#fff;font-size:1rem;">
+			<input type="text" id="nuevo-desc" placeholder="Descripción" required style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:1.5px solid #60a5fa;background:rgba(255,255,255,0.18);color:#fff;font-size:1rem;">
+			<input type="number" id="nuevo-precio" placeholder="Precio" required min="1" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:1.5px solid #60a5fa;background:rgba(255,255,255,0.18);color:#fff;font-size:1rem;">
+		<input type="file" id="nuevo-img" accept="image/*" required style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:1.5px solid #60a5fa;background:rgba(255,255,255,0.18);color:#fff;font-size:1rem;">
+			<button type="submit" style="width:100%;margin-top:8px;padding:12px 0;background:linear-gradient(90deg,#2563eb 0%,#60a5fa 100%);color:#fff;border:none;border-radius:8px;font-weight:bold;font-size:1.1rem;">Agregar producto</button>
+		</form>
+	</div>
+	<div class="productos" id="productos-lista"></div>
+	<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		// Botón cerrar panel admin
+		const cerrarAdminBtn = document.getElementById('cerrar-admin-panel');
+		if (cerrarAdminBtn) {
+			cerrarAdminBtn.onclick = function() {
+				document.getElementById('admin-panel').style.display = 'none';
+			};
+		}
+		// Mostrar panel admin solo si localStorage.adminMode === 'true'
+		if (localStorage.getItem('adminMode') === 'true') {
+			document.getElementById('admin-panel').style.display = 'block';
+		}
+
+		// Manejar formulario de nuevo producto
+		const formAdd = document.getElementById('form-add-product');
+		if (formAdd) {
+			formAdd.addEventListener('submit', function(e) {
+				e.preventDefault();
+				const nombre = document.getElementById('nuevo-nombre').value.trim();
+				const desc = document.getElementById('nuevo-desc').value.trim();
+				const precio = document.getElementById('nuevo-precio').value.trim();
+				const fileInput = document.getElementById('nuevo-img');
+				const file = fileInput.files[0];
+				if (!nombre || !desc || !precio || !file) return;
+				const reader = new FileReader();
+				reader.onload = function(ev) {
+					const img = ev.target.result; // base64
+					let productosExtra = JSON.parse(localStorage.getItem('productosExtra') || '[]');
+					productosExtra.push({nombre, desc, precio, img});
+					localStorage.setItem('productosExtra', JSON.stringify(productosExtra));
+					formAdd.reset();
+					mostrarNotificacion('Producto añadido.');
+					renderProductos();
+				};
+				reader.readAsDataURL(file);
+			});
+		}
+
+		// Carrito de compras
+		const carritoBtn = document.getElementById('carrito');
+		const menuCarrito = document.getElementById('menu-carrito');
+		const listaCarrito = document.getElementById('lista-carrito');
+		const contadorCarrito = document.getElementById('contador-carrito');
+		let productosCarrito = [];
+
+		function guardarCarrito() {
+			localStorage.setItem('carritoTienda', JSON.stringify(productosCarrito));
+		}
+		function cargarCarrito() {
+			productosCarrito = JSON.parse(localStorage.getItem('carritoTienda') || '[]');
+		}
+		function renderCarrito() {
+			listaCarrito.innerHTML = '';
+			let totalPrecio = 0;
+			if (productosCarrito.length === 0) {
+				listaCarrito.innerHTML = '<li class="vacio">El carrito está vacío</li>';
+			} else {
+				productosCarrito.forEach(function(prod, idx) {
+					let precioNum = 0;
+					if (typeof prod.precio === 'string') {
+						let match = prod.precio.replace(/[^\d.]/g, '');
+						precioNum = parseFloat(match) || 0;
+					} else {
+						precioNum = prod.precio;
+					}
+					totalPrecio += precioNum * prod.cantidad;
+					const li = document.createElement('li');
+					li.className = 'item-carrito';
+					li.innerHTML = `
+						<img src="${prod.imagen}" alt="${prod.nombre}">
+						<div class="info">
+							<div class="nombre">${prod.nombre}</div>
+							<div class="precio">${prod.precio}</div>
+						</div>
+						<div class="controles">
+							<button class="menos">-</button>
+							<span class="cantidad">${prod.cantidad}</span>
+							<button class="mas">+</button>
+							<button class="eliminar">×</button>
+						</div>
+					`;
+					li.querySelector('.mas').onclick = function() {
+						prod.cantidad++;
+						guardarCarrito();
+						renderCarrito();
+					};
+					li.querySelector('.menos').onclick = function() {
+						if (prod.cantidad > 1) {
+							prod.cantidad--;
+						} else {
+							productosCarrito.splice(idx, 1);
+						}
+						guardarCarrito();
+						renderCarrito();
+					};
+					li.querySelector('.eliminar').onclick = function() {
+						productosCarrito.splice(idx, 1);
+						guardarCarrito();
+						renderCarrito();
+					};
+					listaCarrito.appendChild(li);
+				});
+			}
+			document.getElementById('carrito-total').textContent = 'Total: $' + totalPrecio.toFixed(2);
+			let total = productosCarrito.reduce((acc, p) => acc + p.cantidad, 0);
+			contadorCarrito.textContent = total;
+			guardarCarrito();
+		}
+
+		   carritoBtn.addEventListener('click', function() {
+			   if (menuCarrito.classList.contains('visible')) {
+				   menuCarrito.classList.remove('visible');
+				   setTimeout(() => { menuCarrito.style.display = 'none'; }, 220);
+			   } else {
+				   menuCarrito.style.display = 'block';
+				   setTimeout(() => { menuCarrito.classList.add('visible'); }, 10);
+			   }
+		   });
+
+		function agregarAlCarrito(nombre, precio, imagen) {
+			let prod = productosCarrito.find(p => p.nombre === nombre);
+			if (prod) {
+				prod.cantidad++;
+			} else {
+				productosCarrito.push({ nombre, precio, imagen, cantidad: 1 });
+			}
+			guardarCarrito();
+			renderCarrito();
+		}
+
+		// Renderizar productos (fijos y extra) y asignar eventos
+		function renderProductos() {
+			const contenedor = document.getElementById('productos-lista');
+			contenedor.innerHTML = '';
+			// Productos extra (admin)
+			let productosExtra = [];
+			try { productosExtra = JSON.parse(localStorage.getItem('productosExtra') || '[]'); } catch(e) { productosExtra = []; }
+			const esAdmin = localStorage.getItem('adminMode') === 'true';
+			productosExtra.forEach(function(prod, idx) {
+				const div = document.createElement('div');
+				div.className = 'producto extra';
+				div.innerHTML =
+					(esAdmin ? `
+					<div class="puntos-admin" style="display:none;position:absolute;top:10px;right:10px;z-index:10;cursor:pointer;font-size:1.6rem;user-select:none;">⋮</div>
+					<div class="menu-admin" style="display:none;position:absolute;top:38px;right:10px;z-index:20;background:#fff;border-radius:8px;box-shadow:0 2px 12px #0002;padding:0;min-width:160px;overflow:hidden;">
+						<button class="admin-eliminar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#e83e8c;font-size:1rem;cursor:pointer;">Eliminar</button>
+						<button class="admin-renombrar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#2563eb;font-size:1rem;cursor:pointer;">Renombrar</button>
+						<button class="admin-agotar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#f59e42;font-size:1rem;cursor:pointer;">No disponible</button>
+						<button class="admin-disponible" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#28a745;font-size:1rem;cursor:pointer;">Disponible</button>
+					</div>
+					` : '') +
+					`<img src="${prod.img}" alt="${prod.nombre}">
+					<h2>${prod.nombre}</h2>
+					<p>${prod.desc}</p>
+					<div class="precio">$${prod.precio}</div>
+					<div class="botones">
+						<button class="boton-comprar">Comprar</button>
+						<button class="boton-info">Agregar al carrito</button>
+					</div>`;
+				div.style.position = 'relative';
+				if (esAdmin) {
+					const puntos = div.querySelector('.puntos-admin');
+					const menu = div.querySelector('.menu-admin');
+					div.addEventListener('mouseenter', () => { puntos.style.display = 'block'; });
+					div.addEventListener('mouseleave', () => { puntos.style.display = 'none'; menu.style.display = 'none'; });
+					puntos.onclick = function(e) {
+						e.stopPropagation();
+						   if (menu.classList.contains('visible')) {
+							   menu.classList.remove('visible');
+							   setTimeout(() => { menu.style.display = 'none'; }, 220);
+						   } else {
+							   menu.style.display = 'block';
+							   setTimeout(() => { menu.classList.add('visible'); }, 10);
+						   }
+					};
+					// Eliminar
+					menu.querySelector('.admin-eliminar').onclick = function(e) {
+						e.stopPropagation();
+						if(confirm('¿Eliminar este producto?')) {
+							let productosExtra = JSON.parse(localStorage.getItem('productosExtra') || '[]');
+							const eliminado = productosExtra[idx];
+							productosExtra.splice(idx, 1);
+							localStorage.setItem('productosExtra', JSON.stringify(productosExtra));
+							// Publicar notificación
+							let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+							notis.unshift({titulo:'Producto eliminado', mensaje:`El producto \"${eliminado.nombre}\" fue eliminado por el admin.`, fecha: new Date().toISOString(), global:true});
+							localStorage.setItem('notificaciones', JSON.stringify(notis));
+							renderProductos();
+						}
+					};
+					// Renombrar y cambiar precio
+					menu.querySelector('.admin-renombrar').onclick = function(e) {
+						e.stopPropagation();
+						let nuevoNombre = prompt('Nuevo nombre para el producto:', prod.nombre);
+						if(nuevoNombre && nuevoNombre.trim()) {
+							let nuevoPrecio = prompt('Nuevo precio para el producto:', prod.precio);
+							if(nuevoPrecio && !isNaN(parseFloat(nuevoPrecio))) {
+								let productosExtra = JSON.parse(localStorage.getItem('productosExtra') || '[]');
+								productosExtra[idx].nombre = nuevoNombre.trim();
+								productosExtra[idx].precio = nuevoPrecio.trim();
+								localStorage.setItem('productosExtra', JSON.stringify(productosExtra));
+								// Publicar notificación
+								let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+								notis.unshift({titulo:'Producto editado', mensaje:`El producto ahora se llama "${nuevoNombre.trim()}" y cuesta $${nuevoPrecio.trim()}.`, fecha: new Date().toISOString(), global:true});
+								localStorage.setItem('notificaciones', JSON.stringify(notis));
+								renderProductos();
+							} else {
+								alert('Precio inválido');
+							}
+						}
+					};
+					// No disponible
+					menu.querySelector('.admin-agotar').onclick = function(e) {
+						e.stopPropagation();
+						let productosExtra = JSON.parse(localStorage.getItem('productosExtra') || '[]');
+						productosExtra[idx].agotado = true;
+						localStorage.setItem('productosExtra', JSON.stringify(productosExtra));
+						// Publicar notificación
+						let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+						notis.unshift({titulo:'Producto agotado', mensaje:`El producto \"${prod.nombre}\" está marcado como no disponible.`, fecha: new Date().toISOString(), global:true});
+						localStorage.setItem('notificaciones', JSON.stringify(notis));
+						renderProductos();
+					};
+					// Volver disponible
+					menu.querySelector('.admin-disponible').onclick = function(e) {
+						e.stopPropagation();
+						let productosExtra = JSON.parse(localStorage.getItem('productosExtra') || '[]');
+						productosExtra[idx].agotado = false;
+						localStorage.setItem('productosExtra', JSON.stringify(productosExtra));
+						// Publicar notificación
+						let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+						notis.unshift({titulo:'Producto disponible', mensaje:`El producto \"${prod.nombre}\" está disponible nuevamente.`, fecha: new Date().toISOString(), global:true});
+						localStorage.setItem('notificaciones', JSON.stringify(notis));
+						renderProductos();
+					};
+				}
+				// Visual: si está agotado (esto debe ser global, no solo para admin)
+				if (prod.agotado) {
+					div.style.opacity = '0.5';
+					div.querySelector('.precio').innerHTML += ' <span style="color:#e83e8c;font-size:0.95em;">(No disponible)</span>';
+					div.querySelector('.boton-comprar').disabled = true;
+					div.querySelector('.boton-info').disabled = true;
+				} else {
+					div.style.opacity = '';
+					div.querySelector('.boton-comprar').disabled = false;
+					div.querySelector('.boton-info').disabled = false;
+				}
+				div.querySelector('.boton-info').onclick = function() {
+					agregarAlCarrito(prod.nombre, '$'+prod.precio, prod.img);
+				};
+				div.querySelector('.boton-comprar').onclick = function() {
+					const producto = {
+						nombre: prod.nombre,
+						precio: '$'+prod.precio,
+						imagen: prod.img,
+						cantidad: 1
+					};
+					localStorage.setItem('productoAComprar', JSON.stringify(producto));
+					window.location.href = 'compra.html';
+				};
+				if (esAdmin && div.querySelector('.boton-eliminar')) {
+					div.querySelector('.boton-eliminar').onclick = function() {
+						if(confirm('¿Eliminar este producto?')) {
+							let productosExtra = JSON.parse(localStorage.getItem('productosExtra') || '[]');
+							productosExtra.splice(idx, 1);
+							localStorage.setItem('productosExtra', JSON.stringify(productosExtra));
+							renderProductos();
+						}
+					};
+				}
+				contenedor.appendChild(div);
+			});
+			// Productos fijos
+			// Cámara (persistente)
+			let camaraData = JSON.parse(localStorage.getItem('productoCamara') || '{}');
+			let camaraNombre = camaraData.nombre || 'Cámara';
+			let camaraPrecio = camaraData.precio || '15';
+			const camara = document.createElement('div');
+			camara.className = 'producto';
+			camara.innerHTML =
+				(esAdmin ? `
+				<div class="puntos-admin" style="display:none;position:absolute;top:10px;right:10px;z-index:10;cursor:pointer;font-size:1.6rem;user-select:none;">⋮</div>
+				<div class="menu-admin" style="display:none;position:absolute;top:38px;right:10px;z-index:20;background:#fff;border-radius:8px;box-shadow:0 2px 12px #0002;padding:0;min-width:160px;overflow:hidden;">
+					<button class="admin-eliminar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#e83e8c;font-size:1rem;cursor:pointer;">Eliminar</button>
+					<button class="admin-renombrar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#2563eb;font-size:1rem;cursor:pointer;">Renombrar/Precio</button>
+					<button class="admin-agotar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#f59e42;font-size:1rem;cursor:pointer;">No disponible</button>
+					<button class="admin-disponible" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#28a745;font-size:1rem;cursor:pointer;">Disponible</button>
+				</div>
+				` : '') +
+				`<img src="Imagenes/Camara.png" alt="Cámara">
+				<h2>${camaraNombre}</h2>
+				<p>Cámara digital de alta resolución.</p>
+				<div class="precio">$${camaraPrecio}</div>
+				<div class="botones">
+					<button class="boton-comprar">Comprar</button>
+					<button class="boton-info">Agregar al carrito</button>
+				</div>`;
+			camara.style.position = 'relative';
+			// Estado visual local para agotado
+			let camaraAgotado = false;
+			if (esAdmin) {
+				const puntos = camara.querySelector('.puntos-admin');
+				const menu = camara.querySelector('.menu-admin');
+				camara.addEventListener('mouseenter', () => { puntos.style.display = 'block'; });
+				camara.addEventListener('mouseleave', () => { puntos.style.display = 'none'; menu.style.display = 'none'; });
+				puntos.onclick = function(e) {
+					e.stopPropagation();
+					   if (menu.classList.contains('visible')) {
+						   menu.classList.remove('visible');
+						   setTimeout(() => { menu.style.display = 'none'; }, 220);
+					   } else {
+						   menu.style.display = 'block';
+						   setTimeout(() => { menu.classList.add('visible'); }, 10);
+					   }
+				};
+				// Eliminar solo visual
+				menu.querySelector('.admin-eliminar').onclick = function(e) {
+					e.stopPropagation();
+					camara.remove();
+				};
+				// Renombrar y cambiar precio
+				menu.querySelector('.admin-renombrar').onclick = function(e) {
+					e.stopPropagation();
+					let nuevoNombre = prompt('Nuevo nombre para el producto:', camara.querySelector('h2').textContent);
+					if(nuevoNombre && nuevoNombre.trim()) {
+						let nuevoPrecio = prompt('Nuevo precio para el producto:', camara.querySelector('.precio').textContent.replace(/[^\d.]/g, ''));
+						if(nuevoPrecio && !isNaN(parseFloat(nuevoPrecio))) {
+							camara.querySelector('h2').textContent = nuevoNombre.trim();
+							camara.querySelector('.precio').innerHTML = '$' + nuevoPrecio.trim();
+							localStorage.setItem('productoCamara', JSON.stringify({nombre: nuevoNombre.trim(), precio: nuevoPrecio.trim()}));
+						} else {
+							alert('Precio inválido');
+						}
+					}
+				};
+				// No disponible
+				menu.querySelector('.admin-agotar').onclick = function(e) {
+					e.stopPropagation();
+					camara.style.opacity = '0.5';
+					if (!camara.querySelector('.precio').innerHTML.includes('No disponible')) {
+						camara.querySelector('.precio').innerHTML += ' <span style="color:#e83e8c;font-size:0.95em;">(No disponible)</span>';
+					}
+					camara.querySelector('.boton-comprar').disabled = true;
+					camara.querySelector('.boton-info').disabled = true;
+				};
+				// Disponible
+				menu.querySelector('.admin-disponible').onclick = function(e) {
+					e.stopPropagation();
+					camara.style.opacity = '';
+					camara.querySelector('.precio').innerHTML = camara.querySelector('.precio').innerHTML.replace(/<span[^>]*>\(No disponible\)<\/span>/, '');
+					camara.querySelector('.boton-comprar').disabled = false;
+					camara.querySelector('.boton-info').disabled = false;
+				};
+			}
+			camara.querySelector('.boton-info').onclick = function() {
+				agregarAlCarrito(camaraNombre, '$'+camaraPrecio, 'Imagenes/Camara.png');
+			};
+			camara.querySelector('.boton-comprar').onclick = function() {
+				const producto = {
+					nombre: camaraNombre,
+					precio: '$'+camaraPrecio,
+					imagen: 'Imagenes/Camara.png',
+					cantidad: 1
+				};
+				localStorage.setItem('productoAComprar', JSON.stringify(producto));
+				window.location.href = 'compra.html';
+			};
+			contenedor.appendChild(camara);
+			// Tinta Epson (persistente)
+			let tintaData = JSON.parse(localStorage.getItem('productoTinta') || '{}');
+			let tintaNombre = tintaData.nombre || 'Tinta Epson';
+			let tintaPrecio = tintaData.precio || '35';
+			const tinta = document.createElement('div');
+			tinta.className = 'producto';
+			tinta.innerHTML =
+				(esAdmin ? `
+				<div class="puntos-admin" style="display:none;position:absolute;top:10px;right:10px;z-index:10;cursor:pointer;font-size:1.6rem;user-select:none;">⋮</div>
+				<div class="menu-admin" style="display:none;position:absolute;top:38px;right:10px;z-index:20;background:#fff;border-radius:8px;box-shadow:0 2px 12px #0002;padding:0;min-width:160px;overflow:hidden;">
+					<button class="admin-eliminar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#e83e8c;font-size:1rem;cursor:pointer;">Eliminar</button>
+					<button class="admin-renombrar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#2563eb;font-size:1rem;cursor:pointer;">Renombrar/Precio</button>
+					<button class="admin-agotar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#f59e42;font-size:1rem;cursor:pointer;">No disponible</button>
+					<button class="admin-disponible" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#28a745;font-size:1rem;cursor:pointer;">Disponible</button>
+				</div>
+				` : '') +
+				`<img src="Imagenes/Tinta.png" alt="Tinta Epson">
+				<h2>${tintaNombre}</h2>
+				<p>Tinta original para impresoras Epson.</p>
+				<div class="precio">$${tintaPrecio}</div>
+				<div class="botones">
+					<button class="boton-comprar">Comprar</button>
+					<button class="boton-info">Agregar al carrito</button>
+				</div>`;
+			tinta.style.position = 'relative';
+			if (esAdmin) {
+				const puntos = tinta.querySelector('.puntos-admin');
+				const menu = tinta.querySelector('.menu-admin');
+				tinta.addEventListener('mouseenter', () => { puntos.style.display = 'block'; });
+				tinta.addEventListener('mouseleave', () => { puntos.style.display = 'none'; menu.style.display = 'none'; });
+				puntos.onclick = function(e) {
+					e.stopPropagation();
+					   if (menu.classList.contains('visible')) {
+						   menu.classList.remove('visible');
+						   setTimeout(() => { menu.style.display = 'none'; }, 220);
+					   } else {
+						   menu.style.display = 'block';
+						   setTimeout(() => { menu.classList.add('visible'); }, 10);
+					   }
+				};
+				menu.querySelector('.admin-eliminar').onclick = function(e) {
+					e.stopPropagation();
+					tinta.remove();
+				};
+				menu.querySelector('.admin-renombrar').onclick = function(e) {
+					e.stopPropagation();
+					let nuevoNombre = prompt('Nuevo nombre para el producto:', tinta.querySelector('h2').textContent);
+					if(nuevoNombre && nuevoNombre.trim()) {
+						let nuevoPrecio = prompt('Nuevo precio para el producto:', tinta.querySelector('.precio').textContent.replace(/[^\d.]/g, ''));
+						if(nuevoPrecio && !isNaN(parseFloat(nuevoPrecio))) {
+							tinta.querySelector('h2').textContent = nuevoNombre.trim();
+							tinta.querySelector('.precio').innerHTML = '$' + nuevoPrecio.trim();
+							localStorage.setItem('productoTinta', JSON.stringify({nombre: nuevoNombre.trim(), precio: nuevoPrecio.trim()}));
+						} else {
+							alert('Precio inválido');
+						}
+					}
+				};
+				menu.querySelector('.admin-agotar').onclick = function(e) {
+					e.stopPropagation();
+					tinta.style.opacity = '0.5';
+					if (!tinta.querySelector('.precio').innerHTML.includes('No disponible')) {
+						tinta.querySelector('.precio').innerHTML += ' <span style=\"color:#e83e8c;font-size:0.95em;\">(No disponible)</span>';
+					}
+					tinta.querySelector('.boton-comprar').disabled = true;
+					tinta.querySelector('.boton-info').disabled = true;
+				};
+				menu.querySelector('.admin-disponible').onclick = function(e) {
+					e.stopPropagation();
+					tinta.style.opacity = '';
+					tinta.querySelector('.precio').innerHTML = tinta.querySelector('.precio').innerHTML.replace(/<span[^>]*>\(No disponible\)<\/span>/, '');
+					tinta.querySelector('.boton-comprar').disabled = false;
+					tinta.querySelector('.boton-info').disabled = false;
+				};
+			}
+			tinta.querySelector('.boton-info').onclick = function() {
+				agregarAlCarrito(tintaNombre, '$'+tintaPrecio, 'Imagenes/Tinta.png');
+			};
+			tinta.querySelector('.boton-comprar').onclick = function() {
+				const producto = {
+					nombre: tintaNombre,
+					precio: '$'+tintaPrecio,
+					imagen: 'Imagenes/Tinta.png',
+					cantidad: 1
+				};
+				localStorage.setItem('productoAComprar', JSON.stringify(producto));
+				window.location.href = 'compra.html';
+			};
+			contenedor.appendChild(tinta);
+			// Toner con selector (persistente)
+			let tonerData = JSON.parse(localStorage.getItem('productoToner') || '{}');
+			let tonerNombre = tonerData.nombre || 'Toner Negro';
+			let tonerPrecio = tonerData.precio || '420';
+			const toner = document.createElement('div');
+			toner.className = 'producto';
+			toner.innerHTML =
+				(esAdmin ? `
+				<div class="puntos-admin" style="display:none;position:absolute;top:10px;right:10px;z-index:10;cursor:pointer;font-size:1.6rem;user-select:none;">⋮</div>
+				<div class="menu-admin" style="display:none;position:absolute;top:38px;right:10px;z-index:20;background:#fff;border-radius:8px;box-shadow:0 2px 12px #0002;padding:0;min-width:160px;overflow:hidden;">
+					<button class="admin-eliminar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#e83e8c;font-size:1rem;cursor:pointer;">Eliminar</button>
+					<button class="admin-renombrar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#2563eb;font-size:1rem;cursor:pointer;">Renombrar/Precio</button>
+					<button class="admin-agotar" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#f59e42;font-size:1rem;cursor:pointer;">No disponible</button>
+					<button class="admin-disponible" style="display:block;width:100%;border:none;background:none;padding:10px 18px;text-align:left;color:#28a745;font-size:1rem;cursor:pointer;">Disponible</button>
+				</div>
+				` : '') +
+				`<img id="img-toner" src="Imagenes/Toner negro.png" alt="Toner Negro">
+				<h2 id="nombre-toner">${tonerNombre}</h2>
+				<p>Toner para impresoras.</p>
+				<select id="selector-toner" style="margin-bottom: 10px; width: 100%; padding: 6px; border-radius: 6px;">
+					<option value="negro" data-img="Imagenes/Toner negro.png" data-precio="15" data-nombre="Toner Negro">Toner Negro</option>
+					<option value="rosa" data-img="Imagenes/Toner rosa.png" data-precio="22" data-nombre="Toner Rosa">Toner Rosa</option>
+					<option value="azul" data-img="Imagenes/Toner azul.webp" data-precio="21" data-nombre="Toner Azul">Toner Azul</option>
+				</select>
+				<div class="precio" id="precio-toner">$${tonerPrecio}</div>
+				<div class="botones">
+					<button class="boton-comprar" id="comprar-toner">Comprar</button>
+					<button class="boton-info" id="agregar-toner">Agregar al carrito</button>
+				</div>`;
+			toner.style.position = 'relative';
+			if (esAdmin) {
+				const puntos = toner.querySelector('.puntos-admin');
+				const menu = toner.querySelector('.menu-admin');
+				toner.addEventListener('mouseenter', () => { puntos.style.display = 'block'; });
+				toner.addEventListener('mouseleave', () => { puntos.style.display = 'none'; menu.style.display = 'none'; });
+				puntos.onclick = function(e) {
+					e.stopPropagation();
+					   if (menu.classList.contains('visible')) {
+						   menu.classList.remove('visible');
+						   setTimeout(() => { menu.style.display = 'none'; }, 220);
+					   } else {
+						   menu.style.display = 'block';
+						   setTimeout(() => { menu.classList.add('visible'); }, 10);
+					   }
+				};
+				menu.querySelector('.admin-eliminar').onclick = function(e) {
+					e.stopPropagation();
+					toner.remove();
+				};
+				menu.querySelector('.admin-renombrar').onclick = function(e) {
+					e.stopPropagation();
+					let nuevoNombre = prompt('Nuevo nombre para el producto:', toner.querySelector('#nombre-toner').textContent);
+					if(nuevoNombre && nuevoNombre.trim()) {
+						let nuevoPrecio = prompt('Nuevo precio para el producto:', toner.querySelector('#precio-toner').textContent.replace(/[^\d.]/g, ''));
+						if(nuevoPrecio && !isNaN(parseFloat(nuevoPrecio))) {
+							toner.querySelector('#nombre-toner').textContent = nuevoNombre.trim();
+							toner.querySelector('#precio-toner').innerHTML = '$' + nuevoPrecio.trim();
+							localStorage.setItem('productoToner', JSON.stringify({nombre: nuevoNombre.trim(), precio: nuevoPrecio.trim()}));
+						} else {
+							alert('Precio inválido');
+						}
+					}
+				};
+				menu.querySelector('.admin-agotar').onclick = function(e) {
+					e.stopPropagation();
+					toner.style.opacity = '0.5';
+					if (!toner.querySelector('#precio-toner').innerHTML.includes('No disponible')) {
+						toner.querySelector('#precio-toner').innerHTML += ' <span style=\"color:#e83e8c;font-size:0.95em;\">(No disponible)</span>';
+					}
+					toner.querySelector('#comprar-toner').disabled = true;
+					toner.querySelector('#agregar-toner').disabled = true;
+				};
+				menu.querySelector('.admin-disponible').onclick = function(e) {
+					e.stopPropagation();
+					toner.style.opacity = '';
+					toner.querySelector('#precio-toner').innerHTML = toner.querySelector('#precio-toner').innerHTML.replace(/<span[^>]*>\(No disponible\)<\/span>/, '');
+					toner.querySelector('#comprar-toner').disabled = false;
+					toner.querySelector('#agregar-toner').disabled = false;
+				};
+			}
+			// (Eliminado: segunda asignación de listeners de admin para toner)
+			const selector = toner.querySelector('#selector-toner');
+			const img = toner.querySelector('#img-toner');
+			const nombreToner = toner.querySelector('#nombre-toner');
+			const precioToner = toner.querySelector('#precio-toner');
+			const btnAgregar = toner.querySelector('#agregar-toner');
+			const btnComprar = toner.querySelector('#comprar-toner');
+			// Si el admin cambió el nombre/precio, mantenerlos aunque se cambie el selector
+			function actualizarToner() {
+				if (localStorage.getItem('productoToner')) {
+					// Mantener nombre y precio personalizados
+					nombreToner.textContent = tonerNombre;
+					precioToner.textContent = '$' + tonerPrecio;
+				} else {
+					const opt = selector.options[selector.selectedIndex];
+					img.src = opt.getAttribute('data-img');
+					nombreToner.textContent = opt.getAttribute('data-nombre');
+					precioToner.textContent = '$' + opt.getAttribute('data-precio');
+				}
+			}
+			selector.addEventListener('change', actualizarToner);
+			actualizarToner();
+			btnAgregar.onclick = function() {
+				if (localStorage.getItem('productoToner')) {
+					agregarAlCarrito(tonerNombre, '$'+tonerPrecio, img.src);
+				} else {
+					const opt = selector.options[selector.selectedIndex];
+					agregarAlCarrito(
+						opt.getAttribute('data-nombre'),
+						'$' + opt.getAttribute('data-precio'),
+						opt.getAttribute('data-img')
+					);
+				}
+			};
+			btnComprar.onclick = function() {
+				if (localStorage.getItem('productoToner')) {
+					const producto = {
+						nombre: tonerNombre,
+						precio: '$'+tonerPrecio,
+						imagen: img.src,
+						cantidad: 1
+					};
+					localStorage.setItem('productoAComprar', JSON.stringify(producto));
+					window.location.href = 'compra.html';
+				} else {
+					const opt = selector.options[selector.selectedIndex];
+					const producto = {
+						nombre: opt.getAttribute('data-nombre'),
+						precio: '$' + opt.getAttribute('data-precio'),
+						imagen: opt.getAttribute('data-img'),
+						cantidad: 1
+					};
+					localStorage.setItem('productoAComprar', JSON.stringify(producto));
+					window.location.href = 'compra.html';
+				}
+			};
+			contenedor.appendChild(toner);
+		}
+
+		renderProductos();
+
+		// Botón comprar del carrito
+		document.getElementById('carrito-comprar').onclick = function() {
+			if (productosCarrito.length === 0) {
+				alert('El carrito está vacío');
+				return;
+			}
+			let totalPrecio = 0;
+			productosCarrito.forEach(function(prod) {
+				let precioNum = 0;
+				if (typeof prod.precio === 'string') {
+					let match = prod.precio.replace(/[^\d.]/g, '');
+					precioNum = parseFloat(match) || 0;
+				} else {
+					precioNum = prod.precio;
+				}
+				totalPrecio += precioNum * prod.cantidad;
+			});
+			localStorage.setItem('carritoTotal', totalPrecio.toFixed(2));
+			window.location.href = 'compra.html';
+		};
+
+		// Inicializar
+		cargarCarrito();
+		renderCarrito();
+	});
+	</script>
+	<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('h1').forEach(function(h1) {
+    const text = h1.textContent;
+    h1.textContent = '';
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        h1.textContent += text.charAt(i);
+        i++;
+        setTimeout(type, 60);
+      }
+    }
+    type();
+  });
+});
+	</script>
+	<!-- Eliminado: estilos y scripts de animación de letras y campos contenteditable -->
+	</div>
+	</body>
+	</html>
+<script>
+window.addEventListener('storage', function(e) {
+  if (e.key === 'mensajeGlobal' && e.newValue) {
+    location.reload();
+  }
+});
+</script>

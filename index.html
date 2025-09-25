@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Imploff</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        @media (min-width: 900px) {
+            .imagenes-finales {
+                flex-wrap: nowrap;
+                gap: 80px;
+            }
+            .imagenes-finales .img-final {
+                max-width: 600px;
+                min-width: 400px;
+                height: 340px;
+                object-fit: cover;
+            }
+        }
+        /* Efecto hover para las imágenes grandes del final */
+        .imagenes-finales {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            margin: 60px 0 40px 0;
+        }
+        .imagenes-finales .img-final {
+            width: 100%;
+            max-width: 98vw;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            margin-bottom: 18px;
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+        .imagenes-finales .img-final:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            /* Quitar fondo blanco o gradiente para que se vea el video */
+            background: transparent !important;
+        }
+
+        /* Excepción: productos destacados y sus tarjetas mantienen color oscuro */
+        .productos-destacados,
+        .productos-destacados * {
+            color: #000000 !important;
+            font-family: Arial, sans-serif !important;
+        }
+
+        /* Títulos y textos de imágenes finales en blanco */
+        .imagenes-finales div,
+        .imagenes-finales div > div {
+            color: #fff !important;
+        }
+
+        .hero-title, .hero-desc, .hero-content, .hero-content * {
+            color: #fff !important;
+        }
+
+        h1, h2, h3, h4, h5, h6, label, p, span, button, input, select, textarea {
+            color: #fff;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        .hero {
+            max-width: 900px;
+            margin: 40px auto 0 auto;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 40px 32px 32px 32px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+        .hero-img {
+            width: 380px;
+            max-width: 60vw;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            transition: transform 0.2s;
+        }
+        .hero-img:hover {
+            transform: scale(1.04);
+        }
+        .hero-content {
+            flex: 1;
+        }
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #222;
+            margin-bottom: 18px;
+        }
+        .hero-desc {
+            font-size: 1.2rem;
+            color: #444;
+            margin-bottom: 24px;
+        }
+        .productos-destacados {
+            max-width: 1000px;
+            margin: 48px auto 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 32px;
+        }
+        .producto-card {
+            background: rgba(255,255,255,0.85); /* semitransparente */
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 28px 20px 20px 20px;
+            text-align: center;
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+        .producto-card:hover {
+            transform: translateY(-6px) scale(1.10);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+        }
+        .producto-img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 12px;
+        }
+        .producto-nombre {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #222;
+            margin-bottom: 0;
+        }
+        .producto-desc {
+            color: #555;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        .producto-precio {
+            color: #007bff;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .video-centro {
+            display: block;
+            margin: 60px auto 40px auto;
+            max-width: 90vw;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        img.centrada.pulse {
+            animation: pulse 0.3s;
+        }
+        img.centrada {
+            display: block;
+            margin: 130px auto 0 auto;
+            max-width: 100%;
+            width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background: #f5f5f5;
+            padding: 20px 0;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        #empezar-comprar {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            z-index: 1000;
+            margin: 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            padding: 16px 32px;
+            font-size: 1.2rem;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+        }
+        #empezar-comprar:hover {
+            background: #339cff;
+        }
+        /* Animación de aparición para el panel de notificaciones */
+        #notificaciones-panel {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.22s cubic-bezier(.4,0,.2,1), transform 0.22s cubic-bezier(.4,0,.2,1);
+            background: rgba(255,255,255,0.92) !important;
+        }
+        #notificaciones-panel.visible {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+        input:focus, textarea:focus {
+  outline: none;
+  border: 2px solid #2563eb;
+  box-shadow: 0 0 8px #2563eb44;
+  animation: escribir-borde 0.7s linear infinite alternate;
+}
+@keyframes escribir-borde {
+  0% { box-shadow: 0 0 8px #2563eb44; }
+  100% { box-shadow: 0 0 16px #2563eb99; }
+}
+input, textarea {
+  caret-color: #2563eb;
+  /* cursor parpadeante azul */
+}
+#mensaje-global-admin {
+  display: none;
+  position: fixed;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2563eb;
+  color: #fff;
+  padding: 18px 36px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-family: 'Montserrat', Arial, sans-serif;
+  box-shadow: 0 4px 24px rgba(30,58,92,0.13);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+#mensaje-global-admin.visible {
+  display: block;
+  opacity: 1;
+  animation: fadeInOutAdmin 5s forwards;
+}
+@keyframes fadeInOutAdmin {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+    </style>
+</head>
+<body>
+    <!-- Imágenes grandes con texto al final de la página -->
+</body>
+</div>
+    <div class="hero">
+        <img src="Imagenes/hero-electronica.jpg" alt="Electrónica y computadoras" class="hero-img" onerror="this.style.display='none'">
+        <div class="hero-content">
+            <img src="Imagenes/Imploff Logo.png" alt="Imploff Logo" style="max-width:480px; width:98%; display:block; margin:0 auto 18px auto;">
+            <button id="empezar-comprar" onclick="window.location.href='tienda.html'">Empezar a comprar</button>
+        </div>
+    </div>
+
+    <video id="video-fondo" src="Videos/Diseño sin título (1).mp4" autoplay loop muted playsinline
+        style="position:fixed;top:0;left:0;width:100vw;height:900px;object-fit:cover;z-index:-1;pointer-events:none;user-select:none;" oncontextmenu="return false;"></video>
+    <h2 style="text-align:center;margin-top:60px;color:#007bff;font-size:2rem;letter-spacing:1px;">Productos destacados</h2>
+    <div class="productos-destacados">
+        <div class="producto-card">
+            <img src="Imagenes/Camara.png" alt="Laptop" class="producto-img" onerror="this.style.display='none'">
+            <div class="producto-nombre">Camara Havit</div>
+        </div>
+        <div class="producto-card">
+            <img src="Imagenes/Toner negro.png" alt="Impresora" class="producto-img" onerror="this.style.display='none'">
+            <div class="producto-nombre">Toner MaxiPrint</div>
+        </div>
+        <div class="producto-card">
+            <img src="Imagenes/Tinta.png" alt="Monitor" class="producto-img" onerror="this.style.display='none'">
+            <div class="producto-nombre">Tinta Epson</div>
+        </div>
+    </div>
+
+    <div class="imagenes-finales">
+        <div style="flex:1 1 50%;max-width:600px;text-align:center;">
+            <img src="Imagenes/Toner negro.png" alt="Estamos ubicados" class="img-final">
+            <div style="font-size:1.5rem;font-weight:bold;color:#222;margin-top:18px;">Toner para tus impresoras</div>
+        </div>
+        <div style="flex:1 1 50%;max-width:600px;text-align:center;">
+            <img src="Imagenes/Copias.jpg" alt="Copias" class="img-final">
+            <div style="font-size:1.5rem;font-weight:bold;color:#222;margin-top:18px;">Podemos sacar copias por ti</div>
+        </div>
+    </div>
+   <div id="notificaciones-panel" style="display:none;position:fixed;top:80px;right:40px;min-width:320px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(30,58,92,0.13);padding:24px 32px;z-index:6000;">
+       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+           <h3 style="margin:0;color:#2563eb;font-family:'Montserrat',Arial,sans-serif;font-weight:bold;">Notificaciones</h3>
+           <button id="cerrar-notificaciones" style="background:none;border:none;font-size:1.5rem;color:#e83e8c;cursor:pointer;">×</button>
+       </div>
+       <ul id="lista-notificaciones" style="padding-left:18px;margin:0 0 8px 0;font-size:1.05rem;color:#222;"></ul>
+   </div>
+   <button id="abrir-notificaciones" style="position:fixed;top:24px;right:100px;z-index=6100;background:#2563eb;color:#fff;border:none;border-radius:50%;width:48px;height:48px;font-size:1.5rem;box-shadow:0 2px 8px rgba(30,58,92,0.13);cursor:pointer;display:none">🔔</button>
+   <script>
+   // Mostrar modal de login si no hay usuario guardado
+   document.addEventListener('DOMContentLoaded', function() {
+       var modal = document.getElementById('login-modal');
+       if (!localStorage.getItem('usuarioNombre')) {
+           modal.style.display = 'flex';
+       } else {
+           modal.style.display = 'none';
+       }
+       document.getElementById('form-login').addEventListener('submit', function(e) {
+           e.preventDefault();
+           var nombre = document.getElementById('nombre-usuario').value.trim();
+           if (nombre.length > 0) {
+               localStorage.setItem('usuarioNombre', nombre);
+               modal.style.display = 'none';
+               mostrarNotificacion('¡Bienvenido, ' + nombre + '!');
+           }
+       });
+   });
+   // Panel de notificaciones globales/personales
+   const panel = document.getElementById('notificaciones-panel');
+   const abrirBtn = document.getElementById('abrir-notificaciones');
+   const cerrarBtn = document.getElementById('cerrar-notificaciones');
+   const lista = document.getElementById('lista-notificaciones');
+   function renderNotificaciones() {
+       lista.innerHTML = '';
+       let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+       const usuario = localStorage.getItem('usuarioNombre') || '';
+       notis = notis.filter(n => n.global || (n.usuario && n.usuario === usuario));
+       if (notis.length === 0) {
+           const li = document.createElement('li');
+           li.textContent = 'No hay notificaciones.';
+           li.style.color = '#888';
+           lista.appendChild(li);
+           return;
+       }
+       notis.forEach(n => {
+           const li = document.createElement('li');
+           li.innerHTML = `<b>${n.titulo||''}</b><br><span style='font-size:0.98em;'>${n.mensaje||''}</span>`;
+           if (n.global) {
+               li.style.borderLeft = '4px solid #2563eb';
+               li.style.background = '#e0e7ff';
+           } else {
+               li.style.borderLeft = n.estado==='aceptado' ? '4px solid #28a745' : (n.estado==='rechazado' ? '4px solid #e83e8c' : '4px solid #f59e42');
+               li.style.background = n.estado==='aceptado' ? '#d1fae5' : (n.estado==='rechazado' ? '#ffe4ef' : '#fffbe6');
+           }
+           li.style.marginBottom = '10px';
+           li.style.padding = '10px 12px';
+           li.style.borderRadius = '8px';
+           lista.appendChild(li);
+       });
+   }
+   abrirBtn.onclick = function() {
+       renderNotificaciones();
+       panel.style.display = 'block';
+       setTimeout(() => { panel.classList.add('visible'); }, 10);
+   };
+   cerrarBtn.onclick = function() {
+       panel.classList.remove('visible');
+       setTimeout(() => { panel.style.display = 'none'; }, 220);
+   };
+   </script>
+    <header>
+    <script>
+                img.src = 'Imagenes/Toner negro.png'; // Cambia el nombre por la imagen que desees mostrar
+                img.alt = 'Toner';
+    </script>
+    <button id="empezar-comprar" onclick="window.location.href='tienda.html'">Empezar a comprar</button>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('h1').forEach(function(h1) {
+    const text = h1.textContent;
+    h1.textContent = '';
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        h1.textContent += text.charAt(i);
+        i++;
+        setTimeout(type, 60);
+      }
+    }
+    type();
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input[type="text"], textarea').forEach(function(input) {
+    var animado = document.createElement('div');
+    animado.className = 'campo-animado';
+    animado.style.marginTop = '8px';
+    animado.style.minHeight = '1.5em';
+    animado.style.fontSize = '1.1em';
+    animado.style.letterSpacing = '1px';
+    input.parentNode.insertBefore(animado, input.nextSibling);
+    input.addEventListener('input', function(e) {
+      var val = input.value;
+      var html = '';
+      for (let i = 0; i < val.length; i++) {
+        html += `<span class='letra-animada' style='animation-delay:${i*0.03}s'>${val[i]}</span>`;
+      }
+      animado.innerHTML = html;
+    });
+  });
+});
+</script>
+<button id="admin-fab" style="display:none;position:fixed;bottom:32px;right:32px;z-index:7000;width:56px;height:56px;border-radius:50%;background:#2563eb;color:#fff;font-size:2.2rem;border:none;box-shadow:0 4px 16px rgba(30,58,92,0.18);cursor:pointer;transition:box-shadow 0.18s;">+</button>
+<div id="admin-fab-menu" style="display:none;position:fixed;bottom:96px;right:36px;z-index:7100;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(30,58,92,0.13);padding:12px 0;min-width:180px;">
+	<button id="fab-producto" style="display:block;width:100%;background:none;border:none;padding:12px 24px;text-align:left;font-size:1.08rem;color:#2563eb;cursor:pointer;">➕ Producto</button>
+	<button id="fab-notificacion" style="display:block;width:100%;background:none;border:none;padding:12px 24px;text-align:left;font-size:1.08rem;color:#2563eb;cursor:pointer;">🔔 Nueva notificación</button>
+	<button id="fab-mensaje-admin" style="display:block;width:100%;background:none;border:none;padding:12px 24px;text-align:left;font-size:1.08rem;color:#e83e8c;cursor:pointer;">💬 Mensaje global</button>
+</div>
+<style>
+#mensaje-global-admin {
+  display: none;
+  position: fixed;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2563eb;
+  color: #fff;
+  padding: 18px 36px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-family: 'Montserrat', Arial, sans-serif;
+  box-shadow: 0 4px 24px rgba(30,58,92,0.13);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+#mensaje-global-admin.visible {
+  display: block;
+  opacity: 1;
+  animation: fadeInOutAdmin 5s forwards;
+}
+@keyframes fadeInOutAdmin {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+</style>
+<div id="mensaje-global-admin"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const fab = document.getElementById('admin-fab');
+  const menu = document.getElementById('admin-fab-menu');
+  const btnProducto = document.getElementById('fab-producto');
+  const btnNotificacion = document.getElementById('fab-notificacion');
+  const btnMensajeAdmin = document.getElementById('fab-mensaje-admin');
+  if (btnMensajeAdmin) {
+    btnMensajeAdmin.onclick = function(e) {
+      e.stopPropagation();
+      menu.classList.remove('visible');
+      setTimeout(() => { menu.style.display = 'none'; }, 220);
+      if (localStorage.getItem('adminMode') === 'true') {
+        const msg = prompt('Mensaje global para todos los usuarios:');
+        if (msg && msg.trim()) {
+          localStorage.setItem('mensajeGlobal', msg.trim());
+          window.mostrarMensajeGlobal(msg.trim());
+        }
+      }
+    };
+  }
+  // Mostrar mensaje global si existe
+  const mensaje = localStorage.getItem('mensajeGlobal');
+  if (mensaje) {
+    window.mostrarMensajeGlobal(mensaje);
+    // Opcional: eliminar después de mostrar una vez
+    setTimeout(() => { localStorage.removeItem('mensajeGlobal'); }, 5200);
+  }
+});
+window.mostrarMensajeGlobal = function(msg) {
+  var el = document.getElementById('mensaje-global-admin');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(function() {
+    el.classList.remove('visible');
+    el.textContent = '';
+  }, 5000);
+};
+</script>
+<script>
+// Comando para desactivar el modo admin desde la consola
+document.addEventListener('DOMContentLoaded', function() {
+  window.desactivarAdmin = function() {
+    localStorage.removeItem('adminMode');
+    var fab = document.getElementById('admin-fab');
+    if (fab) fab.style.display = 'none';
+    if (typeof renderProductos === 'function') renderProductos();
+    alert('Modo admin desactivado');
+  };
+  // Mostrar el botón admin si está activado
+  var fab = document.getElementById('admin-fab');
+  if (fab && localStorage.getItem('adminMode') === 'true') {
+    fab.style.display = 'block';
+  }
+});
+</script>
+<script>
+window.mostrarMensajeAdmin = function(msg) {
+  if (localStorage.getItem('adminMode') !== 'true') return;
+  var el = document.getElementById('mensaje-global-admin');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(function() {
+    el.classList.remove('visible');
+    el.textContent = '';
+  }, 5000);
+};
+</script>
+<div id="mensaje-global-admin"></div>
+<script>
+window.addEventListener('storage', function(e) {
+  if (e.key === 'mensajeGlobal' && e.newValue) {
+    location.reload();
+  }
+});
+</script>
+</body>
+</html>
+

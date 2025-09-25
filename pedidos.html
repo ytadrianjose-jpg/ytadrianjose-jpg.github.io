@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<title>Pedidos</title>
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
+	<style>
+		body {
+			margin: 0;
+			font-family: Arial, sans-serif;
+			background: #f8f9fa;
+		}
+		h1 {
+			text-align: center;
+			margin-top: 32px;
+			color: #222;
+		}
+		.pedidos {
+			max-width: 600px;
+			margin: 40px auto;
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+			padding: 24px 20px 20px 20px;
+		}
+		.pedido {
+			border-bottom: 1px solid #eee;
+			padding: 18px 0;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+		.pedido:last-child {
+			border-bottom: none;
+		}
+		.pedido-info {
+			flex: 1;
+		}
+		.pedido-producto {
+			font-size: 1.1rem;
+			font-weight: bold;
+			color: #333;
+		}
+		.pedido-cantidad {
+			color: #007bff;
+			font-size: 1rem;
+		}
+		.pedido-botones {
+			display: flex;
+			gap: 10px;
+		}
+		.aceptar, .rechazar {
+			padding: 8px 18px;
+			border: none;
+			border-radius: 6px;
+			font-size: 1rem;
+			cursor: pointer;
+			font-family: Arial, sans-serif;
+		}
+		.aceptar {
+			background: #28a745;
+			color: #fff;
+		}
+		.rechazar {
+			background: #e83e8c;
+			color: #fff;
+		}
+		.usuarios {
+			max-width: 600px;
+			margin: 32px auto 0 auto;
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+			padding: 20px 20px 16px 20px;
+		}
+		#usuarios-conteo {
+			font-weight: bold;
+			margin-bottom: 8px;
+		}
+		#usuarios-lista {
+			padding-left: 18px;
+			margin: 0;
+			font-size: 1.05rem;
+			color: #222;
+		}
+		#admin-fab {
+			display:none;
+			position:fixed;
+			bottom:32px;
+			right:32px;
+			z-index:7000;
+			width:56px;
+			height:56px;
+			border-radius:50%;
+			background:#2563eb;
+			color:#fff;
+			font-size:2.2rem;
+			border:none;
+			box-shadow:0 4px 16px rgba(30,58,92,0.18);
+			cursor:pointer;
+			transition:box-shadow 0.18s;
+		}
+		#admin-fab-menu {
+			display:none;
+			position:fixed;
+			bottom:96px;
+			right:36px;
+			z-index:7100;
+			background:#fff;
+			border-radius:12px;
+			box-shadow:0 4px 24px rgba(30,58,92,0.13);
+			padding:12px 0;
+			min-width:180px;
+			opacity: 0;
+			transform: scale(0.95);
+			pointer-events: none;
+			transition: opacity 0.22s cubic-bezier(.4,0,.2,1), transform 0.22s cubic-bezier(.4,0,.2,1);
+		}
+		#admin-fab-menu.visible {
+			opacity: 1;
+			transform: scale(1);
+			pointer-events: auto;
+		}
+		#admin-fab {
+			transition: box-shadow 0.18s, transform 0.18s;
+		}
+		#admin-fab:active {
+			box-shadow: 0 2px 8px rgba(30,58,92,0.18);
+			transform: scale(0.93);
+		}
+		#admin-fab-menu button {
+			display:block;
+			width:100%;
+			background:none;
+			border:none;
+			padding:12px 24px;
+			text-align:left;
+			font-size:1.08rem;
+			color:#2563eb;
+			cursor:pointer;
+			transition: background 0.18s, color 0.18s, transform 0.18s;
+		}
+		#admin-fab-menu button:hover {
+			background: #f1f5fd;
+			color: #1d4ed8;
+			transform: translateX(4px) scale(1.04);
+		}
+		#mensaje-global-admin {
+  display: none;
+  position: fixed;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2563eb;
+  color: #fff;
+  padding: 18px 36px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-family: 'Montserrat', Arial, sans-serif;
+  box-shadow: 0 4px 24px rgba(30,58,92,0.13);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+#mensaje-global-admin.visible {
+  display: block;
+  opacity: 1;
+  animation: fadeInOutAdmin 5s forwards;
+}
+@keyframes fadeInOutAdmin {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+	</style>
+</head>
+<body>
+<div class="usuarios" id="usuarios-apartado">
+	<h2 style="margin-top:0;color:#2563eb;font-size:1.2rem;">Usuarios que han entrado</h2>
+	<div id="usuarios-conteo"></div>
+	<ul id="usuarios-lista"></ul>
+</div>
+	<h1>Pedidos recibidos</h1>
+	<div class="pedidos" id="lista-pedidos">
+		<!-- Los pedidos aparecerán aquí -->
+	</div>
+	<button id="admin-fab">+</button>
+	<div id="admin-fab-menu">
+		<button id="fab-producto">➕ Producto</button>
+		<button id="fab-notificacion">🔔 Nueva notificación</button>
+	</div>
+	<div id="mensaje-global-admin"></div>
+	<script>
+		// Cargar pedidos desde localStorage
+		let ultimoPedidosStr = '';
+		function renderPedidos() {
+			const lista = document.getElementById('lista-pedidos');
+			   let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+			   // Guardar el string actual de pedidos para detectar cambios
+			   ultimoPedidosStr = JSON.stringify(pedidos);
+			   lista.innerHTML = '';
+			   if (pedidos.length === 0) {
+				   lista.innerHTML = '<div style="text-align:center;color:#888;">No hay pedidos nuevos</div>';
+				   return;
+			   }
+			   // Agrupar pedidos por referencia+direccion+monto+imagen+usuario
+			   let agrupados = [];
+			   pedidos.forEach(p => {
+				   // Buscar si ya existe un grupo con misma referencia, direccion, monto, imagen y usuario
+				   let grupo = agrupados.find(g => g.referencia === p.referencia && g.direccion === p.direccion && g.monto === p.monto && g.imagen === p.imagen && g.usuario === p.usuario);
+				   if (grupo) {
+					   grupo.productos.push({ nombre: p.nombre, cantidad: p.cantidad, precio: p.precio });
+				   } else {
+					   agrupados.push({
+						   referencia: p.referencia,
+						   direccion: p.direccion,
+						   monto: p.monto,
+						   imagen: p.imagen,
+						   usuario: p.usuario || '',
+						   productos: [{ nombre: p.nombre, cantidad: p.cantidad, precio: p.precio }]
+					   });
+				   }
+			   });
+			   agrupados.forEach((pedido, idx) => {
+				   const div = document.createElement('div');
+				   div.className = 'pedido';
+				   div.innerHTML = `
+					   <div class="pedido-info">
+						   <div style="margin-bottom:8px;">
+							   ${pedido.productos.map(prod => `<div><b>${prod.nombre}</b> <span style='color:#007bff'>x${prod.cantidad}</span> <span style='color:#2563eb;font-size:0.98em;'>(Precio: ${prod.precio ? prod.precio : 'N/A'})</span></div>`).join('')}
+						   </div>
+						   ${pedido.usuario ? `<div><b>Usuario:</b> ${pedido.usuario}</div>` : ''}
+						   ${pedido.referencia ? `<div><b>Referencia:</b> ${pedido.referencia}</div>` : ''}
+						   ${pedido.direccion ? `<div><b>Dirección:</b> ${pedido.direccion}</div>` : ''}
+						   ${pedido.monto ? `<div><b>Monto pagado:</b> ${pedido.monto} <span style='color:#007bff'>bs.</span></div>` : ''}
+						   ${pedido.imagen ? `<img src="${pedido.imagen}" alt="Imagen adjunta" style="max-width:120px; margin-top:10px; border-radius:8px;">` : ''}
+					   </div>
+					   <div class="pedido-botones">
+						   <button class="aceptar">Aceptar</button>
+						   <button class="rechazar">Rechazar</button>
+					   </div>
+				   `;
+				   div.querySelector('.aceptar').onclick = function() {
+					   // Notificación personal de aceptación
+					   if (pedido.usuario) {
+						   let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+						   notis.unshift({
+							   titulo: 'Pedido aceptado',
+							   mensaje: 'Tu pedido con referencia '+(pedido.referencia||'')+' ha sido aceptado.',
+							   fecha: new Date().toISOString(),
+							   usuario: pedido.usuario,
+							   global: false,
+							   estado: 'aceptado'
+						   });
+						   localStorage.setItem('notificaciones', JSON.stringify(notis));
+					   }
+					   // Eliminar todos los productos de este grupo del array original
+					   pedidos = pedidos.filter(p => !(p.referencia === pedido.referencia && p.direccion === pedido.direccion && p.monto === pedido.monto && p.imagen === pedido.imagen));
+					   localStorage.setItem('pedidos', JSON.stringify(pedidos));
+					   renderPedidos();
+				   };
+				   div.querySelector('.rechazar').onclick = function() {
+					   // Notificación personal de rechazo
+					   if (pedido.usuario) {
+						   let notis = JSON.parse(localStorage.getItem('notificaciones')||'[]');
+						   notis.unshift({
+							   titulo: 'Pedido rechazado',
+							   mensaje: 'Tu pedido con referencia '+(pedido.referencia||'')+' ha sido rechazado.',
+							   fecha: new Date().toISOString(),
+							   usuario: pedido.usuario,
+							   global: false,
+							   estado: 'rechazado'
+						   });
+						   localStorage.setItem('notificaciones', JSON.stringify(notis));
+					   }
+					   pedidos = pedidos.filter(p => !(p.referencia === pedido.referencia && p.direccion === pedido.direccion && p.monto === pedido.monto && p.imagen === pedido.imagen));
+					   localStorage.setItem('pedidos', JSON.stringify(pedidos));
+					   renderPedidos();
+				   };
+				   lista.appendChild(div);
+			   });
+		}
+		renderPedidos();
+
+		// Registrar usuario al entrar (si tiene nombre)
+		document.addEventListener('DOMContentLoaded', function() {
+			let nombre = localStorage.getItem('usuarioNombre');
+			if (nombre) {
+				let usuarios = JSON.parse(localStorage.getItem('usuariosEntraron')||'[]');
+				if (!usuarios.includes(nombre)) {
+					usuarios.push(nombre);
+					localStorage.setItem('usuariosEntraron', JSON.stringify(usuarios));
+				}
+			}
+			// Mostrar usuarios
+			function renderUsuarios() {
+				let usuarios = JSON.parse(localStorage.getItem('usuariosEntraron')||'[]');
+				document.getElementById('usuarios-conteo').textContent = 'Total: ' + usuarios.length;
+				let ul = document.getElementById('usuarios-lista');
+				ul.innerHTML = '';
+				usuarios.forEach(u => {
+					let li = document.createElement('li');
+					li.textContent = u;
+					ul.appendChild(li);
+				});
+			}
+			renderUsuarios();
+		});
+
+		document.addEventListener('DOMContentLoaded', function() {
+			const fab = document.getElementById('admin-fab');
+			const menu = document.getElementById('admin-fab-menu');
+			if (localStorage.getItem('adminMode') === 'true') {
+				fab.style.display = 'block';
+			}
+			fab.onclick = function() {
+				   if (menu.classList.contains('visible')) {
+					   menu.classList.remove('visible');
+					   setTimeout(() => { menu.style.display = 'none'; }, 220);
+				   } else {
+					   menu.style.display = 'block';
+					   setTimeout(() => { menu.classList.add('visible'); }, 10);
+				   }
+			};
+			document.body.addEventListener('click', function(e) {
+				if (e.target !== fab && !menu.contains(e.target)) {
+					menu.style.display = 'none';
+				}
+			});
+		});
+
+		// Comando para desactivar el modo admin desde la consola
+		document.addEventListener('DOMContentLoaded', function() {
+  window.desactivarAdmin = function() {
+    localStorage.removeItem('adminMode');
+    var fab = document.getElementById('admin-fab');
+    if (fab) fab.style.display = 'none';
+    if (typeof renderProductos === 'function') renderProductos();
+    alert('Modo admin desactivado');
+  };
+  // Mostrar el botón admin si está activado
+  var fab = document.getElementById('admin-fab');
+  if (fab && localStorage.getItem('adminMode') === 'true') {
+    fab.style.display = 'block';
+  }
+});
+window.mostrarMensajeGlobal = function(msg) {
+  var el = document.getElementById('mensaje-global-admin');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(function() {
+    el.classList.remove('visible');
+    el.textContent = '';
+  }, 5000);
+};
+document.addEventListener('DOMContentLoaded', function() {
+  const mensaje = localStorage.getItem('mensajeGlobal');
+  if (mensaje) {
+    window.mostrarMensajeGlobal(mensaje);
+    setTimeout(() => { localStorage.removeItem('mensajeGlobal'); }, 5200);
+  }
+});
+window.addEventListener('storage', function(e) {
+  if (e.key === 'mensajeGlobal' && e.newValue) {
+    location.reload();
+  }
+});
+	</script>
+</body>
+</html>
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+	// Firebase y Firestore eliminados. Todo funciona solo con localStorage.
+</script>

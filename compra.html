@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<title>Compra</title>
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
+	<style>
+		body {
+			margin: 0;
+			font-family: 'Montserrat', Arial, sans-serif;
+			background: linear-gradient(120deg, #1e3a5c 0%, #3b82f6 100%);
+			min-height: 100vh;
+		}
+		.contenedor {
+			max-width: 420px;
+			margin: 60px auto;
+			background: rgba(255,255,255,0.10);
+			border-radius: 18px;
+			box-shadow: 0 8px 32px rgba(30,58,92,0.18);
+			padding: 38px 28px 28px 28px;
+			backdrop-filter: blur(6px);
+			border: 1.5px solid rgba(59,130,246,0.18);
+		}
+		h1 {
+			text-align: center;
+			color: #fff;
+			font-size: 2.1rem;
+			font-weight: bold;
+			letter-spacing: 1px;
+			margin-bottom: 24px;
+			text-shadow: 0 2px 8px rgba(30,58,92,0.18);
+		}
+		label {
+			display: block;
+			margin-bottom: 10px;
+			font-weight: 600;
+			color: #dbeafe;
+			letter-spacing: 0.5px;
+		}
+		input[type="text"], input[type="number"] {
+			width: 100%;
+			margin-bottom: 14px;
+			padding: 10px;
+			border-radius: 8px;
+			border: 1.5px solid #60a5fa;
+			background: rgba(255,255,255,0.18);
+			color: #fff;
+			font-size: 1.05rem;
+			transition: border 0.2s, background 0.2s, color 0.2s;
+			outline: none;
+			caret-color: #fff;
+		}
+		input[type="text"]::placeholder, input[type="number"]::placeholder {
+			color: #e0e7ef;
+			opacity: 1;
+		}
+		input[type="text"]:focus, input[type="number"]:focus {
+			border: 1.5px solid #2563eb;
+			background: rgba(59,130,246,0.18);
+			color: #fff;
+		}
+		input[type="file"] {
+			display: none;
+		}
+		.custom-file-label {
+			display: inline-block;
+			background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+			color: #fff;
+			font-weight: 600;
+			padding: 12px 28px;
+			border-radius: 10px;
+			cursor: pointer;
+			font-size: 1rem;
+			margin-bottom: 18px;
+			box-shadow: 0 2px 8px rgba(30,58,92,0.10);
+			transition: background 0.18s, transform 0.18s;
+			border: none;
+			text-align: center;
+		}
+		.custom-file-label:hover {
+			background: linear-gradient(90deg, #1e40af 0%, #60a5fa 100%);
+			transform: scale(1.04);
+		}
+		#file-name {
+			display: block;
+			color: #bae6fd;
+			font-size: 0.98rem;
+			margin-bottom: 10px;
+			text-align: center;
+			min-height: 1.2em;
+		}
+		button {
+			display: block;
+			margin: 24px auto 0 auto;
+			padding: 14px 32px;
+			font-size: 1.1rem;
+			background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+			color: #fff;
+			border: none;
+			border-radius: 10px;
+			cursor: pointer;
+			font-family: 'Montserrat', Arial, sans-serif;
+			font-weight: bold;
+			box-shadow: 0 2px 8px rgba(30,58,92,0.10);
+			letter-spacing: 0.5px;
+			transition: background 0.18s, transform 0.18s;
+		}
+		button:hover {
+			background: linear-gradient(90deg, #1e40af 0%, #60a5fa 100%);
+			transform: scale(1.04);
+		}
+		.preview {
+			display: block;
+			margin: 0 auto 18px auto;
+			max-width: 100%;
+			border-radius: 10px;
+			box-shadow: 0 2px 8px rgba(30,58,92,0.13);
+		}
+		#total-carrito, #producto-individual {
+			color: #bae6fd !important;
+			font-weight: bold;
+			text-shadow: 0 2px 8px rgba(30,58,92,0.18);
+		}
+		#mensaje-exito {
+			background: #2563eb !important;
+			color: #fff !important;
+			border-radius: 10px;
+			box-shadow: 0 2px 8px rgba(30,58,92,0.13);
+		}
+		#mensaje-global-admin {
+  display: none;
+  position: fixed;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2563eb;
+  color: #fff;
+  padding: 18px 36px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-family: 'Montserrat', Arial, sans-serif;
+  box-shadow: 0 4px 24px rgba(30,58,92,0.13);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+#mensaje-global-admin.visible {
+  display: block;
+  opacity: 1;
+  animation: fadeInOutAdmin 5s forwards;
+}
+@keyframes fadeInOutAdmin {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+	</style>
+</head>
+<body>
+   <div id="menu-novedades" style="display:none;position:fixed;top:80px;right:100px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);padding:24px 32px;z-index:6000;min-width:260px;max-width:90vw;text-align:left;">
+	   <h3 style="margin:0 0 12px 0;color:#e83e8c;font-family:'Montserrat',Arial,sans-serif;font-weight:bold;">Novedades</h3>
+	   <ul style="padding-left:18px;margin:0 0 8px 0;font-size:1.05rem;">
+		   <li>¡Nuevo sistema de pedidos y carrito!</li>
+		   <li>Ahora puedes adjuntar comprobante y ver el total.</li>
+		   <li>Pedidos agrupados y con más detalles.</li>
+		   <li>Notificaciones y menú de novedades.</li>
+	   </ul>
+	   <button onclick="document.getElementById('menu-novedades').style.display='none'" style="margin-top:10px;background:#e83e8c;color:#fff;border:none;border-radius:6px;padding:8px 18px;cursor:pointer;">Cerrar</button>
+   </div>
+   <div id="notificaciones" style="display:none;position:fixed;top:0;left:0;width:100%;z-index:5000;text-align:center;">
+   </div>
+   <script>
+   // Mostrar menú de novedades al hacer clic en el botón de notificaciones
+   // Eliminado botón de notificaciones
+   // Mostrar/ocultar notificaciones al hacer clic en el botón
+   document.addEventListener('DOMContentLoaded', function() {
+	   var btnNotif = document.getElementById('btn-notificaciones');
+	   var contNotif = document.getElementById('notificaciones');
+	   btnNotif.addEventListener('click', function() {
+		   if (contNotif.style.display === 'block') {
+			   contNotif.style.display = 'none';
+		   } else {
+			   contNotif.style.display = 'block';
+		   }
+	   });
+   });
+   // Función para mostrar notificaciones
+   function mostrarNotificacion(mensaje, tiempo=3500) {
+	   var cont = document.getElementById('notificaciones');
+	   var msg = document.getElementById('notificaciones-mensaje');
+	   msg.textContent = mensaje;
+	   cont.style.display = 'block';
+	   setTimeout(function(){
+		   cont.style.display = 'none';
+	   }, tiempo);
+   }
+   </script>
+		<div id="mensaje-exito" style="display:none; position:fixed; top:0; left:50%; transform:translate(-50%,-120%); min-width:320px; max-width:90vw; z-index:9999; background:#2563eb; color:#fff; border-radius:0 0 12px 12px; padding:18px 32px; text-align:center; font-size:1.2rem; font-weight:bold; box-shadow:0 8px 32px rgba(30,58,92,0.18); transition: transform 0.5s cubic-bezier(.68,-0.55,.27,1.55); letter-spacing:1px;">¡El pedido ha sido enviado con éxito!</div>
+		<div class="contenedor">
+			<div id="total-carrito" style="display:none; text-align:center; color:#007bff; font-size:1.2rem; font-weight:bold; margin-bottom:18px;"></div>
+			<div id="producto-individual" style="display:none; text-align:center; margin-bottom:18px;"></div>
+			<h1>Compra</h1>
+			<div style="background:#00aeff23;color:#ffffff;padding:18px 16px 14px 16px;border-radius:10px;margin-bottom:22px;text-align:center;font-size:1.08rem;box-shadow:0 2px 8px #0001;">
+				<b>Datos para Pago Móvil:</b><br>
+				Banco: <b>Banesco</b><br>
+				Teléfono: <b>0412-1234567</b><br>
+				C.I.: <b>V-12.345.678</b><br>
+				Nombre: <b>Adrian Pérez</b><br>
+				<span style="color:#e83e8c;font-size:0.98em;">(Realiza el pago móvil y adjunta la captura abajo)</span>
+			</div>
+		   <form id="form-compra">
+			   <label for="referencia">Referencia de pago:</label>
+			   <input type="text" id="referencia" required placeholder="Ej: 1234567890" style="margin-bottom:14px;padding:10px;border-radius:8px;border:1.5px solid #60a5fa;background:rgba(255,255,255,0.18);color:#fff;font-size:1.05rem;transition:border 0.2s, background 0.2s, color 0.2s;outline:none;caret-color:#fff;">
+
+			   <label for="direccion">Dirección de entrega:</label>
+			   <input type="text" id="direccion" required placeholder="Tu dirección completa" style="margin-bottom:14px;padding:10px;border-radius:8px;border:1.5px solid #60a5fa;background:rgba(255,255,255,0.18);color:#fff;font-size:1.05rem;transition:border 0.2s, background 0.2s, color 0.2s;outline:none;caret-color:#fff;">
+
+			   <label for="monto">Monto pagado:</label>
+			   <div style="display:flex;align-items:center;margin-bottom:14px;">
+				   <input type="number" id="monto" required min="1" step="0.01" placeholder="Ej: 500" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;">
+				   <span style="margin-left:8px;font-weight:bold; color: white;">Bs.</span>
+			   </div>
+
+			   <div style="text-align:center;">
+				   <label for="imagen" style="display:block;margin-bottom:10px;font-weight:600;color:#dbeafe;letter-spacing:0.5px;font-size:1.08rem;">Agrega una captura del pago:</label>
+				   <label for="imagen" class="custom-file-label" style="margin-bottom:10px;">Seleccionar archivo</label>
+				   <span id="file-name"></span>
+			   </div>
+			   <input type="file" id="imagen" accept="image/*" required>
+			   <img id="preview" class="preview" style="display:none;"/>
+			   <button type="submit">Enviar pedido</button>
+		</form>
+	</div>
+	<script>
+		   const input = document.getElementById('imagen');
+		   const preview = document.getElementById('preview');
+		   const fileNameSpan = document.getElementById('file-name');
+		   let imagenBase64 = '';
+		   // Detectar producto a comprar
+		   let productoAComprar = null;
+		   let totalCarrito = localStorage.getItem('carritoTotal');
+		   // Si hay un producto temporal en localStorage, usarlo (producto individual)
+		   if (localStorage.getItem('productoAComprar')) {
+			   productoAComprar = JSON.parse(localStorage.getItem('productoAComprar'));
+			   // Limpiar para que no se repita en la siguiente compra
+			   localStorage.removeItem('productoAComprar');
+			   document.getElementById('total-carrito').style.display = 'none';
+			   // Mostrar datos del producto individual
+			   var prodDiv = document.getElementById('producto-individual');
+			   prodDiv.innerHTML = `
+				   <img src="${productoAComprar.imagen}" alt="${productoAComprar.nombre}" style="width:100px;height:100px;object-fit:contain;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.10);margin-bottom:8px;">
+				   <div style="font-size:1.1rem;font-weight:bold;color:#222;">${productoAComprar.nombre}</div>
+				   <div style="font-size:1.1rem;color:#007bff;font-weight:bold;">${productoAComprar.precio}</div>
+			   `;
+			   prodDiv.style.display = 'block';
+		   } else {
+			   // Si no, usar el carrito completo
+			   productoAComprar = JSON.parse(localStorage.getItem('carritoTienda') || '[]');
+			   if (totalCarrito) {
+				   document.getElementById('total-carrito').textContent = 'Total a pagar: $' + totalCarrito;
+				   document.getElementById('total-carrito').style.display = 'block';
+				   // Limpiar el total para que no se repita
+				   localStorage.removeItem('carritoTotal');
+			   }
+		   }
+
+		   input.addEventListener('change', function(e) {
+			   const file = e.target.files[0];
+			   if (file) {
+				   fileNameSpan.textContent = file.name;
+				   const reader = new FileReader();
+				   reader.onload = function(evt) {
+					   imagenBase64 = evt.target.result;
+					   preview.src = imagenBase64;
+					   preview.style.display = 'block';
+				   };
+				   reader.readAsDataURL(file);
+			   } else {
+				   fileNameSpan.textContent = '';
+				   imagenBase64 = '';
+				   preview.style.display = 'none';
+			   }
+		   });
+
+		   document.getElementById('form-compra').addEventListener('submit', function(e) {
+			   e.preventDefault();
+			   const referencia = document.getElementById('referencia').value.trim();
+			   const direccion = document.getElementById('direccion').value.trim();
+			   const monto = document.getElementById('monto').value.trim();
+			   if (!referencia || !direccion || !monto) {
+				   alert('Por favor, completa todos los campos.');
+				   return;
+			   }
+			   if (!imagenBase64) {
+				   alert('Por favor, adjunta una imagen antes de enviar el pedido.');
+				   return;
+			   }
+			   let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+			   const usuarioNombre = localStorage.getItem('usuarioNombre') || '';
+			   // Si es un solo producto
+			   if (productoAComprar && !Array.isArray(productoAComprar)) {
+				   pedidos.push({ ...productoAComprar, imagen: imagenBase64, referencia, direccion, monto, usuario: usuarioNombre });
+			   } else if (Array.isArray(productoAComprar) && productoAComprar.length > 0) {
+				   // Si es el carrito, agregar todos los productos
+				   productoAComprar.forEach(prod => {
+					   pedidos.push({ ...prod, imagen: imagenBase64, referencia, direccion, monto, usuario: usuarioNombre });
+				   });
+			   } else {
+				   // Fallback
+				   pedidos.push({ nombre: 'Producto desconocido', cantidad: 1, imagen: imagenBase64, referencia, direccion, monto, usuario: usuarioNombre });
+			   }
+			   localStorage.setItem('pedidos', JSON.stringify(pedidos));
+			   const mensaje = document.getElementById('mensaje-exito');
+			   mensaje.style.display = 'block';
+			   // Animación hacia abajo centrada
+			   setTimeout(() => {
+				   mensaje.style.transform = 'translate(-50%, 0)';
+			   }, 10);
+			   setTimeout(() => {
+				   mensaje.style.transform = 'translate(-50%, -120%)';
+				   setTimeout(() => {
+					   mensaje.style.display = 'none';
+					   window.location.href = 'index.html';
+				   }, 500);
+			   }, 3500);
+		   });
+	</script>
+	<button id="admin-fab" style="display:none;position:fixed;bottom:32px;right:32px;z-index:7000;width:56px;height:56px;border-radius:50%;background:#2563eb;color:#fff;font-size:2.2rem;border:none;box-shadow:0 4px 16px rgba(30,58,92,0.18);cursor:pointer;transition:box-shadow 0.18s;">+</button>
+<div id="admin-fab-menu" style="display:none;position:fixed;bottom:96px;right:36px;z-index:7100;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(30,58,92,0.13);padding:12px 0;min-width:180px;">
+	<button id="fab-producto" style="display:block;width:100%;background:none;border:none;padding:12px 24px;text-align:left;font-size:1.08rem;color:#2563eb;cursor:pointer;">➕ Producto</button>
+	<button id="fab-notificacion" style="display:block;width:100%;background:none;border:none;padding:12px 24px;text-align:left;font-size:1.08rem;color:#2563eb;cursor:pointer;">🔔 Nueva notificación</button>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const fab = document.getElementById('admin-fab');
+	const menu = document.getElementById('admin-fab-menu');
+	if (localStorage.getItem('adminMode') === 'true') {
+		fab.style.display = 'block';
+	}
+	fab.onclick = function() {
+		   if (menu.classList.contains('visible')) {
+			   menu.classList.remove('visible');
+			   setTimeout(() => { menu.style.display = 'none'; }, 220);
+		   } else {
+			   menu.style.display = 'block';
+			   setTimeout(() => { menu.classList.add('visible'); }, 10);
+		   }
+	};
+	document.body.addEventListener('click', function(e) {
+		if (e.target !== fab && !menu.contains(e.target)) {
+			menu.style.display = 'none';
+		}
+	});
+});
+</script>
+<script>
+// Comando para desactivar el modo admin desde la consola
+document.addEventListener('DOMContentLoaded', function() {
+  window.desactivarAdmin = function() {
+    localStorage.removeItem('adminMode');
+    var fab = document.getElementById('admin-fab');
+    if (fab) fab.style.display = 'none';
+    if (typeof renderProductos === 'function') renderProductos();
+    alert('Modo admin desactivado');
+  };
+  // Mostrar el botón admin si está activado
+  var fab = document.getElementById('admin-fab');
+  if (fab && localStorage.getItem('adminMode') === 'true') {
+    fab.style.display = 'block';
+  }
+});
+</script>
+<div id="mensaje-global-admin"></div>
+<script>
+window.mostrarMensajeGlobal = function(msg) {
+  var el = document.getElementById('mensaje-global-admin');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(function() {
+    el.classList.remove('visible');
+    el.textContent = '';
+  }, 5000);
+};
+document.addEventListener('DOMContentLoaded', function() {
+  const mensaje = localStorage.getItem('mensajeGlobal');
+  if (mensaje) {
+    window.mostrarMensajeGlobal(mensaje);
+    setTimeout(() => { localStorage.removeItem('mensajeGlobal'); }, 5200);
+  }
+});
+window.addEventListener('storage', function(e) {
+  if (e.key === 'mensajeGlobal' && e.newValue) {
+    location.reload();
+  }
+});
+</script>
+</body>
+</html>
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+	// Firebase y Firestore eliminados. Todo funciona solo con localStorage.
+</script>
